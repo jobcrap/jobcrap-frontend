@@ -1,0 +1,418 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/authStore';
+import { useCreatePost } from '@/hooks/usePosts';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CATEGORIES, TRIGGER_WARNINGS, POST_LIMITS, COUNTRIES } from '@/utils/constants';
+import { validatePostContent, countSentences } from '@/utils/validation';
+import { PenSquare, AlertCircle, Check, ChevronsUpDown, Eye, ShieldCheck, Clock, Globe, ThumbsUp, MessageCircle, Share2, ShieldQuestion } from 'lucide-react';
+import { PostSkeleton } from '@/components/ui/skeleton';
+import { countries } from 'countries-list';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+
+const getFlagEmoji = (countryCode) => {
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+}
+
+const COUNTRY_OPTIONS = Object.entries(countries).map(([code, data]) => ({
+    value: data.name,
+    label: `${getFlagEmoji(code)} ${data.name} `
+})).sort((a, b) => a.label.localeCompare(b.label));
+
+export default function CreatePost() {
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuthStore();
+    const createPostMutation = useCreatePost();
+
+    const [formData, setFormData] = useState({
+        profession: '',
+        country: '',
+        category: '',
+        text: '',
+        triggerWarnings: [],
+        isAnonymous: false
+    });
+    const [open, setOpen] = useState(false);
+    const [errors, setErrors] = useState({});
+    const isLoading = createPostMutation.isPending;
+
+    // Redirect if not authenticated
+    if (!isAuthenticated) {
+        navigate('/login');
+        return null;
+    }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleTriggerWarningToggle = (warning) => {
+        setFormData(prev => ({
+            ...prev,
+            triggerWarnings: prev.triggerWarnings.includes(warning)
+                ? prev.triggerWarnings.filter(w => w !== warning)
+                : [...prev.triggerWarnings, warning]
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const newErrors = {};
+
+        // Validate required fields
+        if (!formData.profession.trim()) {
+            newErrors.profession = 'Profession is required';
+        }
+        if (!formData.country) {
+            newErrors.country = 'Country is required';
+        }
+        if (!formData.category) {
+            newErrors.category = 'Category is required';
+        }
+
+        // Validate post content
+        const contentErrors = validatePostContent(formData.text);
+        if (Object.keys(contentErrors).length > 0) {
+            Object.assign(newErrors, contentErrors);
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        createPostMutation.mutate(formData, {
+            onSuccess: () => navigate('/feed')
+        });
+    };
+
+    const charCount = formData.text.length;
+    const sentenceCount = countSentences(formData.text);
+    const isCharLimitClose = charCount > POST_LIMITS.MAX_CHARACTERS * 0.8;
+    const isSentenceLimitClose = sentenceCount > POST_LIMITS.MAX_SENTENCES * 0.8;
+
+    return (
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">
+            <div className="mb-10">
+                <h1 className="text-4xl font-black tracking-tight text-foreground mb-3 leading-tight">
+                    Share your <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Digital Truth</span>
+                </h1>
+                <p className="text-lg text-muted-foreground font-medium max-w-2xl">
+                    Whether it's a victory, a warning, or a cry for help, your story matters. Always anonymous, always heard.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                {/* Form Section */}
+                <div className="lg:col-span-7 space-y-8">
+                    <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-[2.5rem] shadow-xl">
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            {/* Text Area */}
+                            <div className="space-y-3">
+                                <Label className="text-sm font-bold ml-1 flex items-center gap-2">
+                                    <PenSquare className="w-4 h-4 text-primary" /> What's on your mind?
+                                </Label>
+                                <Textarea
+                                    name="text"
+                                    value={formData.text}
+                                    onChange={handleChange}
+                                    placeholder="Write your professional story here... Keep it real, keep it professional."
+                                    className="min-h-[250px] rounded-3xl border-border/40 bg-background/50 focus:border-primary/50 focus:ring-primary/20 transition-all text-lg p-6"
+                                    required
+                                />
+                                <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest px-2 text-muted-foreground">
+                                    <span className={formData.text.length > POST_LIMITS.MAX_CHARACTERS ? 'text-red-500' : ''}>
+                                        {formData.text.length} / {POST_LIMITS.MAX_CHARACTERS} Characters
+                                    </span>
+                                    <span>{sentenceCount} / {POST_LIMITS.MAX_SENTENCES} Sentences</span>
+                                </div>
+                            </div>
+
+                            {/* Options Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Category */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-bold ml-1">Category</Label>
+                                    <Select
+                                        value={formData.category}
+                                        onValueChange={(val) => setFormData({ ...formData, category: val })}
+                                    >
+                                        <SelectTrigger className="rounded-2xl border-border/40 bg-background/50 h-12">
+                                            <SelectValue placeholder="Select Category" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-border/40">
+                                            {CATEGORIES.map((cat) => (
+                                                <SelectItem key={cat.value} value={cat.value} className="rounded-lg">
+                                                    {cat.emoji} {cat.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Profession */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-bold ml-1">Your Profession</Label>
+                                    <Input
+                                        name="profession"
+                                        placeholder="e.g. Senior Software Engineer"
+                                        value={formData.profession}
+                                        onChange={handleChange}
+                                        className="rounded-2xl border-border/40 bg-background/50 h-12"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Country Selector */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-bold ml-1">Country</Label>
+                                    <Popover open={open} onOpenChange={setOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={open}
+                                                className="w-full justify-between rounded-2xl border-border/40 bg-background/50 h-12 font-normal"
+                                            >
+                                                {formData.country ? (
+                                                    <span className="flex items-center gap-2">
+                                                        {COUNTRY_OPTIONS.find((c) => c.value === formData.country)?.label}
+                                                    </span>
+                                                ) : (
+                                                    "Select Country"
+                                                )}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[300px] p-0 rounded-2xl border-border/40 shadow-2xl backdrop-blur-xl">
+                                            <Command>
+                                                <CommandInput placeholder="Search country..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No country found.</CommandEmpty>
+                                                    <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                                        {COUNTRY_OPTIONS.map((c) => (
+                                                            <CommandItem
+                                                                key={c.value}
+                                                                value={c.value}
+                                                                onSelect={() => {
+                                                                    setFormData({ ...formData, country: c.value });
+                                                                    setOpen(false);
+                                                                }}
+                                                                className="rounded-xl cursor-pointer"
+                                                            >
+                                                                <Check className={cn("mr-2 h-4 w-4", formData.country === c.value ? "opacity-100" : "opacity-0")} />
+                                                                {c.label}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+
+                                {/* Anonymity */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-bold ml-1">Identity Setting</Label>
+                                    <div
+                                        onClick={() => setFormData({ ...formData, isAnonymous: !formData.isAnonymous })}
+                                        className={cn(
+                                            "h-12 w-full rounded-2xl border-2 flex items-center justify-between px-4 cursor-pointer transition-all duration-300",
+                                            formData.isAnonymous
+                                                ? "bg-primary/10 border-primary/40 text-primary shadow-inner"
+                                                : "bg-background/50 border-border/40 text-muted-foreground"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <ShieldCheck className={cn("w-5 h-5 transition-transform duration-500", formData.isAnonymous ? "scale-110" : "scale-100")} />
+                                            <span className="font-bold">Post Anonymously</span>
+                                        </div>
+                                        <div className={cn(
+                                            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+                                            formData.isAnonymous ? "bg-primary border-primary scale-110" : "border-muted/50"
+                                        )}>
+                                            {formData.isAnonymous && <Check className="w-4 h-4 text-white" />}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Trigger Warnings */}
+                            <div className="space-y-4">
+                                <Label className="text-sm font-bold ml-1 flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4 text-amber-500" /> Sensitive Content Warnings
+                                </Label>
+                                <div className="flex flex-wrap gap-2">
+                                    {TRIGGER_WARNINGS.map((tw) => (
+                                        <Badge
+                                            key={tw.value}
+                                            variant={formData.triggerWarnings.includes(tw.value) ? 'default' : 'secondary'}
+                                            onClick={() => handleTriggerWarningToggle(tw.value)}
+                                            className={cn(
+                                                "cursor-pointer px-4 py-2 rounded-full text-xs font-bold transition-all border-0",
+                                                formData.triggerWarnings.includes(tw.value)
+                                                    ? "bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20"
+                                                    : "bg-secondary/50 hover:bg-secondary/80 text-muted-foreground"
+                                            )}
+                                        >
+                                            {tw.label}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                size="lg"
+                                disabled={isLoading}
+                                className="w-full h-14 rounded-full text-xl font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4"
+                            >
+                                {isLoading ? "Sharing with the world..." : "Publish Final Truth"}
+                            </Button>
+                        </form>
+                    </Card>
+                </div>
+
+                {/* Preview Section */}
+                <div className="lg:col-span-5 sticky top-24">
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between px-2">
+                            <h3 className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
+                                <Eye className="w-5 h-5 text-primary" /> Live Preview
+                            </h3>
+                            <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground animate-pulse">Updating Real-time</span>
+                        </div>
+
+                        {/* Dummy Post Card */}
+                        <Card className="relative overflow-hidden border-border/40 bg-card/60 backdrop-blur-xl shadow-2xl rounded-[2.5rem] p-8">
+                            <div className="absolute top-0 right-0 px-6 py-2 bg-primary/10 border-l border-b border-primary/20 rounded-bl-3xl text-[10px] font-black uppercase tracking-widest text-primary">
+                                Preview Mode
+                            </div>
+
+                            <div className="flex items-start gap-4 mb-6">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center border-2 border-primary/20">
+                                    {formData.isAnonymous ? (
+                                        <ShieldCheck className="w-6 h-6 text-primary" />
+                                    ) : (
+                                        <img
+                                            src={useAuthStore.getState().user?.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                                            className="w-full h-full rounded-full object-cover"
+                                            alt="Preview"
+                                        />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-bold text-foreground truncate">
+                                            {formData.isAnonymous ? 'Anonymous' : (useAuthStore.getState().user?.username || 'Member')}
+                                        </span>
+                                        {formData.category ? (
+                                            <Badge className="bg-primary/10 text-primary border-0 text-[10px] h-5 px-2 font-bold uppercase transition-all">
+                                                {CATEGORIES.find(c => c.value === formData.category)?.emoji} {formData.category}
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="text-[10px] h-5 text-muted-foreground/50 border-dashed">
+                                                Category
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                                        <span className={!formData.profession ? "text-muted-foreground/30 italic" : "truncate"}>
+                                            {formData.profession || 'Your Profession'}
+                                        </span>
+                                        <span>•</span>
+                                        <span className={!formData.country ? "text-muted-foreground/30 italic" : ""}>
+                                            {formData.country || 'Global'}
+                                        </span>
+                                        <span>•</span>
+                                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Just now</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 mb-8 min-h-[150px]">
+                                {formData.text ? (
+                                    <p className="text-foreground/90 leading-relaxed text-lg font-medium tracking-tight whitespace-pre-wrap transition-opacity duration-300">
+                                        {formData.text}
+                                    </p>
+                                ) : (
+                                    <div className="space-y-3 pt-2">
+                                        <div className="h-4 w-full bg-muted/20 animate-pulse rounded-full" />
+                                        <div className="h-4 w-full bg-muted/20 animate-pulse rounded-full" />
+                                        <div className="h-4 w-2/3 bg-muted/20 animate-pulse rounded-full" />
+                                    </div>
+                                )}
+
+                                {formData.triggerWarnings.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 pt-2">
+                                        {formData.triggerWarnings.map(tw => (
+                                            <span key={tw} className="text-[10px] font-black uppercase text-amber-500/80 tracking-tighter">⚠️ {tw}</span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between opacity-40 grayscale select-none pointer-events-none">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                        <ThumbsUp className="w-5 h-5" />
+                                        <span>0</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                        <MessageCircle className="w-5 h-5" />
+                                        <span>0</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-muted-foreground text-sm font-bold bg-muted/10 px-3 py-1 rounded-full">
+                                    <Globe className="w-4 h-4" />
+                                    <span>English</span>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Tips Card */}
+                        <Card className="p-6 rounded-3xl bg-primary/5 border border-primary/10 shadow-none">
+                            <h4 className="font-bold text-sm mb-2 flex items-center gap-2 text-primary">
+                                <ShieldQuestion className="w-4 h-4" /> Sharing Tips
+                            </h4>
+                            <ul className="space-y-2 text-xs text-muted-foreground font-medium">
+                                <li className="flex items-start gap-2">• Describe the context clearly but keep it concise.</li>
+                                <li className="flex items-start gap-2">• Use trigger warnings for sensitive topics.</li>
+                                <li className="flex items-start gap-2">• Remember that once shared, truths cannot be easily retracted.</li>
+                            </ul>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

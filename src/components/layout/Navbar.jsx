@@ -22,9 +22,8 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Admin check
-    const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
-    const isAdmin = user?.role === 'admin' || adminEmails.includes(user?.email);
+    // Admin check - only by role
+    const isAdmin = user?.role === 'admin';
 
     const handleLogout = () => {
         logout();

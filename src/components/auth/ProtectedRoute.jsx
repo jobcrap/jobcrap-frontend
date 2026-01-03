@@ -6,9 +6,8 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     const { isAuthenticated, user, isLoading } = useAuthStore();
     const location = useLocation();
 
-    // Check admin by email from env or role
-    const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
-    const isAdmin = user?.role === 'admin' || adminEmails.includes(user?.email);
+    // Check admin by role only
+    const isAdmin = user?.role === 'admin';
 
     if (isLoading) {
         return (

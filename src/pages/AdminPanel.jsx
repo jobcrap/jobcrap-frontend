@@ -63,9 +63,8 @@ export default function AdminPanel() {
         variant: "default"
     });
 
-    // Admin access check
-    const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
-    const isAdmin = user?.role === 'admin' || adminEmails.includes(user?.email);
+    // Admin access check - role based only
+    const isAdmin = user?.role === 'admin';
 
     // Tab switching with navigation
     const setActiveTab = (newTab) => navigate(`/admin/${newTab}`);

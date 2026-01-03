@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from '@/context/ThemeContext';
 import Layout from '@/components/layout/Layout';
@@ -64,7 +64,7 @@ function App() {
         }}
       />
       <ThemeProvider>
-        <BrowserRouter>
+        <HashRouter>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Landing />} />
@@ -102,7 +102,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
       </ThemeProvider>
     </QueryClientProvider>
   );

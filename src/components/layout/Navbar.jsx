@@ -144,7 +144,7 @@ export default function Navbar() {
                                 </Button>
                             </>
                         ) : (
-                            <div className="flex items-center gap-1.5">
+                            <div className="hidden md:flex items-center gap-1.5">
                                 <Button
                                     variant="ghost"
                                     onClick={() => navigate('/login')}

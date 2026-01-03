@@ -116,7 +116,7 @@ export default function Login() {
             </div>
 
             {/* Right Side: Form (Focused) */}
-            <div className="flex items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-background/80 backdrop-blur-xl lg:border-l lg:border-white/5">
+            <div className="flex items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-background/80 backdrop-blur-xl lg:border-l lg:border-white/5 max-lg:bg-transparent">
                 {/* Mobile Background Blobs */}
                 <div className="absolute lg:hidden top-0 left-0 w-full h-full bg-mesh -z-10" />
 
@@ -125,15 +125,15 @@ export default function Login() {
                         <div className="lg:hidden mb-6 text-center">
                             <Logo size="xl" className="mx-auto" />
                         </div>
-                        <h2 className="text-4xl font-black text-foreground mb-2 leading-tight">Welcome Back</h2>
-                        <p className="text-muted-foreground font-medium text-lg">
+                        <h2 className="text-4xl font-black text-foreground max-lg:text-white mb-2 leading-tight">Welcome Back</h2>
+                        <p className="text-muted-foreground max-lg:text-white/70 font-medium text-lg">
                             Login to access your profile.
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <Label className="text-[11px] font-black uppercase tracking-widest ml-1 text-muted-foreground/80">Email Address</Label>
+                            <Label className="text-[11px] font-black uppercase tracking-widest ml-1 text-muted-foreground/80 max-lg:text-white/60">Email Address</Label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <Input
@@ -153,7 +153,7 @@ export default function Login() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[11px] font-black uppercase tracking-widest ml-1 text-muted-foreground/80">Password</Label>
+                            <Label className="text-[11px] font-black uppercase tracking-widest ml-1 text-muted-foreground/80 max-lg:text-white/60">Password</Label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <Input
@@ -200,9 +200,9 @@ export default function Login() {
 
                     <div className="relative my-8 flex items-center justify-center">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-border/40" />
+                            <span className="w-full border-t border-border/40 max-lg:border-white/10" />
                         </div>
-                        <span className="relative bg-background px-4 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+                        <span className="relative bg-background max-lg:bg-transparent px-4 text-[10px] font-black text-muted-foreground max-lg:text-white/60 uppercase tracking-[0.2em]">
                             Or continue with
                         </span>
                     </div>
@@ -217,7 +217,7 @@ export default function Login() {
                         Sign in with Google
                     </Button>
 
-                    <p className="text-center mt-8 text-sm font-medium text-muted-foreground">
+                    <p className="text-center mt-8 text-sm font-medium text-muted-foreground max-lg:text-white/70">
                         Don't have an account?{' '}
                         <Link to="/register" className="text-primary font-black hover:underline underline-offset-8 transition-all">
                             Sign Up

@@ -9,6 +9,7 @@ import Register from '@/pages/Register';
 import Profile from '@/pages/Profile';
 import CreatePost from '@/pages/CreatePost';
 import PostDetail from '@/pages/PostDetail';
+import Impressum from '@/pages/Impressum';
 import MyStories from '@/pages/MyStories';
 import AdminPanel from '@/pages/AdminPanel';
 import Privacy from '@/pages/Privacy';
@@ -97,6 +98,7 @@ function App() {
               <Route path="post/:id" element={<PostDetail />} />
               <Route path="privacy" element={<Privacy />} />
               <Route path="terms" element={<Terms />} />
+              <Route path="impressum" element={<Impressum />} />
 
               {/* 404 Route */}
               <Route path="*" element={<NotFound />} />

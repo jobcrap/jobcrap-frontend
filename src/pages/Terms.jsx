@@ -7,8 +7,8 @@ export default function Terms() {
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
-                    <Scale className="w-10 h-10 text-blue-600" />
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+                    <Scale className="w-10 h-10 text-primary" />
+                    <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
                         Terms of Service
                     </h1>
                 </div>
@@ -22,7 +22,7 @@ export default function Terms() {
                 <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Agreement to Terms</h2>
                     <p className="text-gray-700 dark:text-gray-300">
-                        By accessing or using WorkStories, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.
+                        By accessing or using jobcrap, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.
                     </p>
                 </Card>
 
@@ -81,7 +81,7 @@ export default function Terms() {
                         </div>
                         <div>
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Our Platform</h3>
-                            <p>WorkStories, our logo, and all related marks are our property. You may not use them without permission.</p>
+                            <p>jobcrap, our logo, and all related marks are our property. You may not use them without permission.</p>
                         </div>
                     </div>
                 </Card>
@@ -134,12 +134,12 @@ export default function Terms() {
                 </Card>
 
                 {/* Contact */}
-                <Card className="p-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-900">
-                    <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-200 mb-3">Contact Us</h2>
-                    <p className="text-blue-800 dark:text-blue-300">
+                <Card className="p-6 bg-primary/5 border-primary/20">
+                    <h2 className="text-xl font-semibold text-foreground mb-3">Contact Us</h2>
+                    <p className="text-muted-foreground">
                         Questions about these Terms? Contact us at:{' '}
-                        <a href="mailto:legal@workstories.com" className="font-semibold underline">
-                            legal@workstories.com
+                        <a href="mailto:legal@jobcrap.com" className="font-bold text-primary underline underline-offset-4">
+                            legal@jobcrap.com
                         </a>
                     </p>
                 </Card>

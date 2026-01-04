@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 export default function SettingsTab() {
     const [settings, setSettings] = useState({
         privacy_policy: '',
+        impressum: '',
         landing_sample_story: {
             text: '',
             profession: '',
@@ -36,6 +37,7 @@ export default function SettingsTab() {
             const newSettings = { ...settings };
             data.forEach(s => {
                 if (s.key === 'privacy_policy') newSettings.privacy_policy = s.value;
+                if (s.key === 'impressum') newSettings.impressum = s.value;
                 if (s.key === 'landing_sample_story') newSettings.landing_sample_story = s.value;
             });
             setSettings(newSettings);
@@ -104,6 +106,34 @@ export default function SettingsTab() {
                 <p className="mt-4 text-xs text-muted-foreground flex items-center gap-2">
                     <Info className="w-3 h-3" />
                     Plain text only. Support for Markdown is coming soon.
+                </p>
+            </Card>
+
+            {/* Impressum Section */}
+            <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-3xl shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-foreground">Impressum (Legal Notice)</h2>
+                        <p className="text-muted-foreground font-medium">Manage the legal information required by German Law.</p>
+                    </div>
+                    <Button
+                        onClick={() => handleSave('impressum')}
+                        disabled={isSaving}
+                        className="rounded-full px-6"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save Impressum
+                    </Button>
+                </div>
+                <Textarea
+                    value={settings.impressum}
+                    onChange={(e) => setSettings(prev => ({ ...prev, impressum: e.target.value }))}
+                    placeholder="Enter Impressum content here (e.g., Address, Represented by, etc.)..."
+                    className="min-h-[300px] rounded-2xl border-border/40 bg-background/50 font-medium leading-relaxed"
+                />
+                <p className="mt-4 text-xs text-muted-foreground flex items-center gap-2">
+                    <Info className="w-3 h-3" />
+                    Focus on § 5 TMG requirements: Name, Address, Email, Representatives, and Reg. numbers.
                 </p>
             </Card>
 

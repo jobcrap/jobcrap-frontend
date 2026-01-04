@@ -1,35 +1,36 @@
 import { Link } from 'react-router-dom';
+import Logo from '@/components/common/Logo';
 
 export default function Footer() {
     return (
-        <footer className="border-t bg-gray-50 mt-auto">
-            <div className="container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <footer className="border-t border-border/40 bg-background/50 backdrop-blur-xl mt-auto">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
                     {/* About */}
-                    <div>
-                        <h3 className="font-semibold text-gray-900 mb-3">WorkStories</h3>
-                        <p className="text-sm text-gray-600">
-                            Share your professional stories with the world. Funny, sad, or quirky - every experience matters.
+                    <div className="col-span-1 md:col-span-1">
+                        <Logo size="md" className="mb-6" />
+                        <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                            The anonymous platform for workplace truths. Unfiltered, honest, and completely confidential.
                         </p>
                     </div>
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="font-semibold text-gray-900 mb-3">Quick Links</h3>
-                        <ul className="space-y-2 text-sm">
+                        <h3 className="font-bold text-foreground mb-6 uppercase tracking-widest text-[11px]">Quick Links</h3>
+                        <ul className="space-y-4 text-sm font-semibold">
                             <li>
-                                <Link to="/" className="text-gray-600 hover:text-gray-900">
+                                <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
                                     Home
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/create" className="text-gray-600 hover:text-gray-900">
-                                    Share Story
+                                <Link to="/feed" className="text-muted-foreground hover:text-primary transition-colors">
+                                    Browse Stories
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/about" className="text-gray-600 hover:text-gray-900">
-                                    About Us
+                                <Link to="/create" className="text-muted-foreground hover:text-primary transition-colors">
+                                    Post Story
                                 </Link>
                             </li>
                         </ul>
@@ -37,21 +38,21 @@ export default function Footer() {
 
                     {/* Legal */}
                     <div>
-                        <h3 className="font-semibold text-gray-900 mb-3">Legal</h3>
-                        <ul className="space-y-2 text-sm">
+                        <h3 className="font-bold text-foreground mb-6 uppercase tracking-widest text-[11px]">Legal</h3>
+                        <ul className="space-y-4 text-sm font-semibold">
                             <li>
-                                <Link to="/privacy" className="text-gray-600 hover:text-gray-900">
+                                <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                                     Privacy Policy
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/terms" className="text-gray-600 hover:text-gray-900">
+                                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
                                     Terms of Service
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/gdpr" className="text-gray-600 hover:text-gray-900">
-                                    GDPR Compliance
+                                <Link to="/impressum" className="text-muted-foreground hover:text-primary transition-colors">
+                                    Impressum
                                 </Link>
                             </li>
                         </ul>
@@ -59,21 +60,26 @@ export default function Footer() {
 
                     {/* Contact */}
                     <div>
-                        <h3 className="font-semibold text-gray-900 mb-3">Contact</h3>
-                        <p className="text-sm text-gray-600">
-                            Have feedback or questions?
+                        <h3 className="font-bold text-foreground mb-6 uppercase tracking-widest text-[11px]">Contact</h3>
+                        <p className="text-sm text-muted-foreground mb-4 font-medium">
+                            Have feedback?
                         </p>
                         <a
-                            href="mailto:support@workstories.com"
-                            className="text-sm text-blue-600 hover:text-blue-700"
+                            href="mailto:support@jobcrap.com"
+                            className="text-sm font-bold text-primary hover:underline underline-offset-4 transition-all"
                         >
-                            support@workstories.com
+                            support@jobcrap.com
                         </a>
                     </div>
                 </div>
 
-                <div className="border-t mt-8 pt-6 text-center text-sm text-gray-600">
-                    <p>&copy; {new Date().getFullYear()} WorkStories. All rights reserved.</p>
+                <div className="border-t border-border/40 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+                    <p>&copy; {new Date().getFullYear()} jobcrap. All rights reserved.</p>
+                    <div className="flex items-center gap-6">
+                        <span>Built for Truth</span>
+                        <div className="w-1 h-1 rounded-full bg-primary/40"></div>
+                        <span>Anonymous Forever</span>
+                    </div>
                 </div>
             </div>
         </footer>

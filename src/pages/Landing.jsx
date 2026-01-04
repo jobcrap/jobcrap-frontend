@@ -13,10 +13,7 @@ const SamplePost = ({ story }) => (
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-purple-500/30 rounded-[2.5rem] blur-2xl opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
 
         <Card className="relative overflow-hidden border-border/40 bg-card/40 backdrop-blur-2xl shadow-2xl rounded-[2.2rem] p-8 transition-all duration-500 hover:translate-y-[-4px]">
-            {/* Sample Label */}
-            <div className="absolute top-0 right-0 px-6 py-2 bg-primary/10 border-l border-b border-primary/20 rounded-bl-[1.5rem] text-[10px] font-black uppercase tracking-widest text-primary">
-                Sample Truth
-            </div>
+
 
             <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center border-2 border-primary/20">
@@ -133,7 +130,7 @@ export default function Landing() {
                 </h1>
 
                 <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
-                    The anonymous platform for the darkest, funniest, and most heartbreaking stories from your professional life.
+                    The anonymous platform for the darkest, funniest, and most heartbreaking stories from work.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -150,7 +147,7 @@ export default function Landing() {
                         onClick={() => navigate('/feed')}
                         className="w-full sm:w-auto rounded-full px-8 h-14 text-lg font-semibold bg-background/50 backdrop-blur-sm border-2 border-border/50 hover:bg-background/80"
                     >
-                        Browse Anonymous Stories
+                        Read Anonymous Stories
                     </Button>
                 </div>
 

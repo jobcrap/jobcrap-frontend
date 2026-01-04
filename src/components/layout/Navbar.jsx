@@ -176,7 +176,7 @@ export default function Navbar() {
 
             {/* Mobile Menu */}
             <div className={cn(
-                "md:hidden absolute top-full left-0 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-2xl transition-all duration-300 origin-top overflow-hidden",
+                "md:hidden absolute top-full left-0 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-2xl transition-all duration-300 origin-top overflow-y-auto",
                 isMenuOpen ? "max-h-[80vh] py-6 opacity-100" : "max-h-0 py-0 opacity-0"
             )}>
                 <div className="px-6 flex flex-col gap-4">

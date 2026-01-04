@@ -237,6 +237,13 @@ export default function Register() {
                             {errors.confirmPassword && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.confirmPassword}</p>}
                         </div>
 
+                        <p className="text-[11px] text-center text-muted-foreground/80 max-lg:text-white/60 font-medium px-2">
+                            By signing up, you agree to our{' '}
+                            <Link to="/terms" className="text-primary font-bold hover:underline underline-offset-4">Terms of Service</Link>
+                            {' '}and{' '}
+                            <Link to="/privacy" className="text-primary font-bold hover:underline underline-offset-4">Privacy Policy</Link>.
+                        </p>
+
                         <Button
                             type="submit"
                             disabled={isLoading}

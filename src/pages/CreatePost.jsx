@@ -40,7 +40,7 @@ const getFlagEmoji = (countryCode) => {
 
 const COUNTRY_OPTIONS = Object.entries(countries).map(([code, data]) => ({
     value: data.name,
-    label: `${getFlagEmoji(code)} ${data.name} `
+    label: `${getFlagEmoji(code)} ${data.name}`
 })).sort((a, b) => a.label.localeCompare(b.label));
 
 export default function CreatePost() {
@@ -57,6 +57,7 @@ export default function CreatePost() {
         isAnonymous: false
     });
     const [open, setOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [errors, setErrors] = useState({});
     const isLoading = createPostMutation.isPending;
 
@@ -195,47 +196,77 @@ export default function CreatePost() {
                                 {/* Country Selector */}
                                 <div className="space-y-3">
                                     <Label className="text-sm font-bold ml-1">Country</Label>
-                                    <Popover open={open} onOpenChange={setOpen}>
+                                    <Popover open={open} onOpenChange={(isOpen) => {
+                                        setOpen(isOpen);
+                                        if (isOpen) setSearchQuery('');
+                                    }}>
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 role="combobox"
                                                 aria-expanded={open}
-                                                className="w-full justify-between rounded-2xl border-border/40 bg-background/50 h-12 font-normal"
+                                                className="w-full justify-between rounded-2xl border-border/40 bg-background/50 h-12 font-medium"
                                             >
                                                 {formData.country ? (
                                                     <span className="flex items-center gap-2">
                                                         {COUNTRY_OPTIONS.find((c) => c.value === formData.country)?.label}
                                                     </span>
                                                 ) : (
-                                                    "Select Country"
+                                                    <span className="text-muted-foreground/60 tracking-tight">Search or scroll to select...</span>
                                                 )}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[300px] p-0 rounded-2xl border-border/40 shadow-2xl backdrop-blur-xl">
-                                            <Command>
-                                                <CommandInput placeholder="Search country..." />
-                                                <CommandList>
-                                                    <CommandEmpty>No country found.</CommandEmpty>
-                                                    <CommandGroup className="max-h-[300px] overflow-y-auto">
-                                                        {COUNTRY_OPTIONS.map((c) => (
-                                                            <CommandItem
-                                                                key={c.value}
-                                                                value={c.value}
-                                                                onSelect={() => {
-                                                                    setFormData({ ...formData, country: c.value });
-                                                                    setOpen(false);
-                                                                }}
-                                                                className="rounded-xl cursor-pointer"
-                                                            >
-                                                                <Check className={cn("mr-2 h-4 w-4", formData.country === c.value ? "opacity-100" : "opacity-0")} />
-                                                                {c.label}
-                                                            </CommandItem>
-                                                        ))}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
+                                        <PopoverContent className="w-[350px] p-0 rounded-2xl border-border/40 shadow-2xl backdrop-blur-3xl overflow-hidden z-50">
+                                            <div className="flex flex-col h-[400px]">
+                                                {/* Search Box */}
+                                                <div className="p-4 border-b border-white/5 bg-white/5 backdrop-blur-md">
+                                                    <div className="relative">
+                                                        <PenSquare className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                        <Input
+                                                            placeholder="Type your country..."
+                                                            value={searchQuery}
+                                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                                            className="pl-10 h-10 bg-background/40 border-border/40 rounded-xl focus:ring-primary/20 text-sm font-medium"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* List */}
+                                                <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                                                    {COUNTRY_OPTIONS.filter(c =>
+                                                        c.value.toLowerCase().includes(searchQuery.toLowerCase())
+                                                    ).map((c) => (
+                                                        <button
+                                                            key={c.value}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, country: c.value });
+                                                                setOpen(false);
+                                                            }}
+                                                            className={cn(
+                                                                "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group text-left",
+                                                                formData.country === c.value
+                                                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                                                    : "hover:bg-white/10 text-foreground/80 hover:text-foreground"
+                                                            )}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-lg leading-none">{c.label.split(' ')[0]}</span>
+                                                                <span className="text-sm font-bold tracking-tight">{c.value}</span>
+                                                            </div>
+                                                            {formData.country === c.value && <Check className="w-4 h-4 text-white" />}
+                                                        </button>
+                                                    ))}
+                                                    {COUNTRY_OPTIONS.filter(c =>
+                                                        c.value.toLowerCase().includes(searchQuery.toLowerCase())
+                                                    ).length === 0 && (
+                                                            <div className="py-12 text-center">
+                                                                <p className="text-sm text-muted-foreground font-medium">No country found.</p>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            </div>
                                         </PopoverContent>
                                     </Popover>
                                 </div>

@@ -30,8 +30,8 @@ export const countSentences = (text) => {
 export const validatePostContent = (text) => {
     const errors = {};
 
-    if (!text || text.trim().length < POST_LIMITS.MIN_CHARACTERS) {
-        errors.text = `Post must be at least ${POST_LIMITS.MIN_CHARACTERS} characters`;
+    if (!text || text.trim().length === 0) {
+        errors.text = `Post content cannot be empty`;
     }
 
     if (text && text.length > POST_LIMITS.MAX_CHARACTERS) {

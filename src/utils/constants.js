@@ -65,7 +65,7 @@ export const LANGUAGES = [
 export const POST_LIMITS = {
     MAX_CHARACTERS: 700,
     MAX_SENTENCES: 7,
-    MIN_CHARACTERS: 20
+    MIN_CHARACTERS: 1
 };
 
 // Pagination

@@ -10,7 +10,8 @@ import { CATEGORIES, COUNTRIES, TRIGGER_WARNINGS, POST_LIMITS } from '@/utils/co
 import { validatePostContent } from '@/utils/validation';
 import { postsAPI } from '@/services/api.service';
 import toast from 'react-hot-toast';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ShieldCheck, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -18,7 +19,8 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
         country: '',
         category: '',
         text: '',
-        triggerWarnings: []
+        triggerWarnings: [],
+        isAnonymous: false
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +32,8 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
                 country: story.country || '',
                 category: story.category || '',
                 text: story.text || '',
-                triggerWarnings: story.triggerWarnings || []
+                triggerWarnings: story.triggerWarnings || [],
+                isAnonymous: story.isAnonymous || false
             });
         }
     }, [story]);
@@ -203,6 +206,31 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
                                 Note: Stories with trigger warnings will be flagged for admin review
                             </p>
                         )}
+                    </div>
+
+                    {/* Anonymity Toggle */}
+                    <div className="space-y-2">
+                        <Label className="dark:text-gray-300">Identity Setting</Label>
+                        <div
+                            onClick={() => setFormData({ ...formData, isAnonymous: !formData.isAnonymous })}
+                            className={cn(
+                                "h-12 w-full rounded-xl border-2 flex items-center justify-between px-4 cursor-pointer transition-all duration-300",
+                                formData.isAnonymous
+                                    ? "bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400"
+                                    : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500"
+                            )}
+                        >
+                            <div className="flex items-center gap-2">
+                                <ShieldCheck className={cn("w-5 h-5 transition-transform duration-500", formData.isAnonymous ? "scale-110" : "scale-100")} />
+                                <span className="font-bold">Post Anonymously</span>
+                            </div>
+                            <div className={cn(
+                                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+                                formData.isAnonymous ? "bg-blue-600 border-blue-600 scale-110" : "border-gray-300 dark:border-gray-600"
+                            )}>
+                                {formData.isAnonymous && <Check className="w-4 h-4 text-white" />}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Buttons */}

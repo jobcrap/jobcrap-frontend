@@ -44,7 +44,7 @@ jobcrap
 [City, Zip Code, Country]
 
 Contact:
-Email: support@jobcrap.com
+Email: contact@jobcrap.de
 
 Represented by:
 [Name of Representative]

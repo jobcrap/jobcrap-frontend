@@ -1,148 +1,163 @@
 import { Card } from '@/components/ui/card';
-import { Scale, Shield } from 'lucide-react';
+import { Scale, Info } from 'lucide-react';
 
 export default function Terms() {
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 animate-fade-in">
             {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                    <Scale className="w-10 h-10 text-primary" />
-                    <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">
-                        Terms of Service
-                    </h1>
-                </div>
-                <p className="text-gray-600 dark:text-gray-400">
-                    Last updated: December 2024
-                </p>
-            </div>
-
-            <div className="space-y-6">
-                {/* Agreement */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Agreement to Terms</h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                        By accessing or using jobcrap, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.
-                    </p>
-                </Card>
-
-                {/* Account Requirements */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Account Registration</h2>
-                    <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                        <li>You must be at least 16 years old to use this service</li>
-                        <li>You must provide accurate and complete information</li>
-                        <li>You are responsible for maintaining account security</li>
-                        <li>You must not create multiple accounts</li>
-                        <li>One person or legal entity may maintain only one account</li>
-                    </ul>
-                </Card>
-
-                {/* Content Guidelines */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Content Guidelines</h2>
-                    <div className="space-y-3 text-gray-700 dark:text-gray-300">
-                        <p className="font-semibold text-gray-900 dark:text-white">You agree NOT to post content that:</p>
-                        <ul className="list-disc list-inside space-y-2">
-                            <li>Violates laws or regulations</li>
-                            <li>Infringes on intellectual property rights</li>
-                            <li>Contains hate speech, harassment, or discrimination</li>
-                            <li>Includes personal information of others without consent</li>
-                            <li>Is spam, advertising, or promotional material</li>
-                            <li>Contains malware or malicious code</li>
-                            <li>Impersonates others or misrepresents affiliations</li>
-                        </ul>
-                        <p className="mt-3">
-                            <strong>Required:</strong> Use trigger warnings for sensitive content (violence, trauma, mental health, etc.)
+            <div className="mb-12 text-center md:text-left">
+                <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+                    <div className="p-4 rounded-[2rem] bg-primary/10 border-2 border-primary/20 shadow-inner group transition-transform hover:scale-110">
+                        <Scale className="w-12 h-12 text-primary group-hover:animate-pulse" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground leading-tight">
+                            Terms of <span className="underline decoration-primary/20">Service</span>
+                        </h1>
+                        <p className="text-muted-foreground font-bold mt-2 uppercase tracking-widest text-xs flex items-center justify-center md:justify-start gap-2">
+                            Last Updated • January 2026
                         </p>
                     </div>
-                </Card>
+                </div>
+            </div>
 
-                {/* User Conduct */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">User Conduct</h2>
-                    <p className="text-gray-700 dark:text-gray-300 mb-3">You agree to:</p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                        <li>Share authentic professional experiences</li>
-                        <li>Respect other users and their stories</li>
-                        <li>Use voting features responsibly</li>
-                        <li>Report inappropriate content or behavior</li>
-                        <li>Maintain civility in comments and interactions</li>
-                    </ul>
-                </Card>
+            <div className="space-y-8">
+                <Card className="p-8 md:p-12 border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl rounded-[2.5rem]">
+                    <div className="prose prose-lg dark:prose-invert max-w-none">
+                        <p className="text-foreground/90 font-bold text-xl mb-8">
+                            Welcome to Jobcrap. By accessing or using this website, you agree to be bound by these Terms of Service. If you do not agree, do not use the platform.
+                        </p>
 
-                {/* Intellectual Property */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Intellectual Property</h2>
-                    <div className="space-y-3 text-gray-700 dark:text-gray-300">
-                        <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Your Content</h3>
-                            <p>You retain ownership of content you post. By posting, you grant us a worldwide, non-exclusive license to use, display, and distribute your content on our platform.</p>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Our Platform</h3>
-                            <p>jobcrap, our logo, and all related marks are our property. You may not use them without permission.</p>
+                        <div className="space-y-10">
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">1</span>
+                                    Intended Audience
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    This platform is not intended for children or minors. By using Jobcrap, you confirm that you are not a minor and that you are legally allowed to use this service in your country.
+                                </p>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">2</span>
+                                    Platform Description
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    Jobcrap is a platform where users can share workplace-related stories and content, including anonymous posts.
+                                </p>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">3</span>
+                                    User Responsibility
+                                </h2>
+                                <div className="space-y-3">
+                                    <p className="text-foreground/80 leading-relaxed font-medium">You are solely responsible for the content you post. You agree NOT to post:</p>
+                                    <ul className="list-disc list-inside space-y-2 text-foreground/75 font-medium ml-4">
+                                        <li>Illegal content</li>
+                                        <li>Hate speech, threats, or harassment</li>
+                                        <li>Defamation or false accusations</li>
+                                        <li>Personal data of other people</li>
+                                        <li>Content that violates any law</li>
+                                    </ul>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">4</span>
+                                    Anonymity
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    You may post anonymously. However, we reserve the right to store technical data and to identify users if required by law or for platform safety and abuse prevention.
+                                </p>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">5</span>
+                                    Moderation and Enforcement
+                                </h2>
+                                <div className="space-y-3">
+                                    <p className="text-foreground/80 leading-relaxed font-medium">We reserve the right to:</p>
+                                    <ul className="list-disc list-inside space-y-2 text-foreground/75 font-medium ml-4">
+                                        <li>Remove or edit any content</li>
+                                        <li>Suspend or ban any account</li>
+                                        <li>Moderate the platform at our own discretion</li>
+                                    </ul>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">6</span>
+                                    No Warranty
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    The service is provided "as is" without any warranty. We do not guarantee uptime, availability, or error-free operation.
+                                </p>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">7</span>
+                                    Limitation of Liability
+                                </h2>
+                                <div className="space-y-3">
+                                    <p className="text-foreground/80 leading-relaxed font-medium">Jobcrap is not responsible for:</p>
+                                    <ul className="list-disc list-inside space-y-2 text-foreground/75 font-medium ml-4">
+                                        <li>User-generated content</li>
+                                        <li>Any damages resulting from the use of the platform</li>
+                                        <li>Data loss or service interruptions</li>
+                                    </ul>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">8</span>
+                                    Account Termination
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    We may terminate or suspend access to the service at any time without prior notice if these terms are violated.
+                                </p>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">9</span>
+                                    Changes to Terms
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    We may update these Terms of Service at any time. Continued use of the platform means you accept the new terms.
+                                </p>
+                            </section>
+
+                            <section>
+                                <h2 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary text-sm">10</span>
+                                    Contact
+                                </h2>
+                                <p className="text-foreground/80 leading-relaxed font-medium">
+                                    contact@jobcrap.de
+                                </p>
+                            </section>
                         </div>
                     </div>
                 </Card>
 
-                {/* Moderation */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Content Moderation</h2>
-                    <p className="text-gray-700 dark:text-gray-300 mb-3">
-                        We reserve the right to:
-                    </p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                        <li>Review and moderate all content</li>
-                        <li>Remove content that violates these terms</li>
-                        <li>Suspend or terminate accounts for violations</li>
-                        <li>Block users from the platform</li>
-                        <li>Report illegal activity to authorities</li>
-                    </ul>
-                </Card>
-
-                {/* Disclaimers */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Disclaimers</h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                        WorkStories is provided "as is" without warranties of any kind. We do not guarantee accuracy, availability, or reliability. User-generated content represents individual opinions, not our views.
-                    </p>
-                </Card>
-
-                {/* Limitation of Liability */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Limitation of Liability</h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                        We shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service. Our total liability shall not exceed the amount you paid us in the past 12 months (currently $0 for free accounts).
-                    </p>
-                </Card>
-
-                {/* Changes to Terms */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Changes to Terms</h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                        We may update these terms from time to time. We will notify users of significant changes via email or platform notice. Continued use after changes constitutes acceptance.
-                    </p>
-                </Card>
-
-                {/* Termination */}
-                <Card className="p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Account Termination</h2>
-                    <p className="text-gray-700 dark:text-gray-300">
-                        You may delete your account at any time from your Profile page. We may terminate or suspend your account for violations of these terms. Upon termination, your content may be removed.
-                    </p>
-                </Card>
-
-                {/* Contact */}
-                <Card className="p-6 bg-primary/5 border-primary/20">
-                    <h2 className="text-xl font-semibold text-foreground mb-3">Contact Us</h2>
-                    <p className="text-muted-foreground">
-                        Questions about these Terms? Contact us at:{' '}
-                        <a href="mailto:legal@jobcrap.com" className="font-bold text-primary underline underline-offset-4">
-                            legal@jobcrap.com
+                <div className="mt-12 text-center text-muted-foreground p-8 rounded-3xl bg-secondary/30 backdrop-blur-sm border border-border/40">
+                    <p className="font-medium flex items-center justify-center gap-2">
+                        <Info className="w-4 h-4 text-primary" />
+                        Questions about our Terms? Contact us at{' '}
+                        <a href="mailto:contact@jobcrap.de" className="text-primary font-black hover:underline underline-offset-4">
+                            contact@jobcrap.de
                         </a>
                     </p>
-                </Card>
+                </div>
             </div>
         </div>
     );

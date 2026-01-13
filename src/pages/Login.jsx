@@ -58,7 +58,13 @@ export default function Login() {
 
         if (success) {
             toast.success('Welcome back to the Vault!');
-            navigate('/');
+            // Redirect based on role
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         } else {
             toast.error(authError || 'Access denied. Check your credentials.');
             setIsLoading(false);
@@ -70,7 +76,13 @@ export default function Login() {
         const success = await loginWithGoogle();
         if (success) {
             toast.success('Identity verified!');
-            navigate('/');
+            // Redirect based on role
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         } else {
             toast.error(authError || 'Google authentication failed');
             setIsLoading(false);

@@ -65,10 +65,10 @@ export default function Footer() {
                             Have feedback?
                         </p>
                         <a
-                            href="mailto:support@jobcrap.com"
+                            href="mailto:contact@jobcrap.de"
                             className="text-sm font-bold text-primary hover:underline underline-offset-4 transition-all"
                         >
-                            support@jobcrap.com
+                            contact@jobcrap.de
                         </a>
                     </div>
                 </div>

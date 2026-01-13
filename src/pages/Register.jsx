@@ -25,7 +25,8 @@ export default function Register() {
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        agreeToTerms: false
     });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
@@ -33,8 +34,11 @@ export default function Register() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -56,6 +60,9 @@ export default function Register() {
         if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
+        if (!formData.agreeToTerms) {
+            newErrors.agreeToTerms = 'You must agree to the Terms and Privacy Policy';
+        }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -67,7 +74,13 @@ export default function Register() {
 
         if (success) {
             toast.success('Identity Created. Welcome to the movement!');
-            navigate('/');
+            // Redirect based on role
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         } else {
             toast.error(authError || 'Creation failed. Please try again.');
             setIsLoading(false);
@@ -79,7 +92,13 @@ export default function Register() {
         const success = await loginWithGoogle();
         if (success) {
             toast.success('Welcome, Truth Seeker!');
-            navigate('/');
+            // Redirect based on role
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         } else {
             toast.error(authError || 'Google authentication failed');
             setIsLoading(false);
@@ -237,12 +256,22 @@ export default function Register() {
                             {errors.confirmPassword && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.confirmPassword}</p>}
                         </div>
 
-                        <p className="text-[11px] text-center text-muted-foreground/80 max-lg:text-white/60 font-medium px-2">
-                            By signing up, you agree to our{' '}
-                            <Link to="/terms" className="text-primary font-bold hover:underline underline-offset-4">Terms of Service</Link>
-                            {' '}and{' '}
-                            <Link to="/privacy" className="text-primary font-bold hover:underline underline-offset-4">Privacy Policy</Link>.
-                        </p>
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3 px-1">
+                                <input
+                                    type="checkbox"
+                                    name="agreeToTerms"
+                                    id="agreeToTerms"
+                                    checked={formData.agreeToTerms}
+                                    onChange={handleChange}
+                                    className="mt-1 w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20"
+                                />
+                                <Label htmlFor="agreeToTerms" className="text-xs font-medium leading-relaxed text-muted-foreground/80 max-lg:text-white/70">
+                                    I confirm that I am not a minor and that I agree to the <Link to="/terms" className="text-primary font-bold hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>.
+                                </Label>
+                            </div>
+                            {errors.agreeToTerms && <p className="text-[10px] text-red-500 font-bold ml-8">{errors.agreeToTerms}</p>}
+                        </div>
 
                         <Button
                             type="submit"

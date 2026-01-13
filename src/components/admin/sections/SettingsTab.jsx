@@ -11,6 +11,8 @@ import toast from 'react-hot-toast';
 export default function SettingsTab() {
     const [settings, setSettings] = useState({
         privacy_policy: '',
+        terms_of_service: '',
+        support_email: '',
         impressum: '',
         landing_sample_story: {
             text: '',
@@ -37,6 +39,8 @@ export default function SettingsTab() {
             const newSettings = { ...settings };
             data.forEach(s => {
                 if (s.key === 'privacy_policy') newSettings.privacy_policy = s.value;
+                if (s.key === 'terms_of_service') newSettings.terms_of_service = s.value;
+                if (s.key === 'support_email') newSettings.support_email = s.value;
                 if (s.key === 'impressum') newSettings.impressum = s.value;
                 if (s.key === 'landing_sample_story') newSettings.landing_sample_story = s.value;
             });
@@ -81,6 +85,64 @@ export default function SettingsTab() {
 
     return (
         <div className="space-y-10 animate-fade-in-up">
+            {/* General Settings Section */}
+            <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-3xl shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-foreground">General Settings</h2>
+                        <p className="text-muted-foreground font-medium">Core platform identification and contact points.</p>
+                    </div>
+                    <Button
+                        onClick={() => handleSave('support_email')}
+                        disabled={isSaving}
+                        className="rounded-full px-6"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save Settings
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label className="font-bold ml-1">Support Email</Label>
+                        <Input
+                            value={settings.support_email}
+                            onChange={(e) => setSettings(prev => ({ ...prev, support_email: e.target.value }))}
+                            placeholder="e.g. contact@jobcrap.de"
+                            className="rounded-xl border-border/40 bg-background/50"
+                        />
+                        <p className="text-xs text-muted-foreground flex items-center gap-2 ml-1">
+                            <Globe className="w-3 h-3" />
+                            This email is displayed in the footer and legal pages.
+                        </p>
+                    </div>
+                </div>
+            </Card>
+
+            {/* Terms of Service Section */}
+            <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-3xl shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-foreground">Terms of Service</h2>
+                        <p className="text-muted-foreground font-medium">Manage the legal agreement between you and your users.</p>
+                    </div>
+                    <Button
+                        onClick={() => handleSave('terms_of_service')}
+                        disabled={isSaving}
+                        className="rounded-full px-6"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save Terms
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                    <Textarea
+                        value={settings.terms_of_service}
+                        onChange={(e) => setSettings(prev => ({ ...prev, terms_of_service: e.target.value }))}
+                        placeholder="Enter Terms of Service content here..."
+                        className="min-h-[300px] rounded-2xl border-border/40 bg-background/50 font-medium leading-relaxed"
+                    />
+                </div>
+            </Card>
             {/* Privacy Policy Section */}
             <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-3xl shadow-xl">
                 <div className="flex items-center justify-between mb-6">

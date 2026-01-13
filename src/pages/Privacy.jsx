@@ -33,27 +33,53 @@ export default function Privacy() {
     }
 
     // Default Fallback content if DB is empty
-    const defaultContent = `jobcrap ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
+    const defaultContent = `Jobcrap ("we", "our", "us") respects your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our website and services.
 
-Information We Collect:
-Account Information: Email address, password (encrypted), and profile preferences.
-Content You Create: Stories, comments, votes, and job/profession/country data.
-Usage Data: IP address, browser type, device info, and interaction data.
+1. Information We Collect
+We may collect the following information:
+- Email address (if you register)
+- Content you post (stories, comments)
+- Technical data (IP address, browser type, device, logs)
+- Cookies and usage data
 
-How We Use Your Information:
-- Provide and maintain our services
-- Personalize your experience
-- Detect and prevent technical issues
-- Enforce our Terms of Service
+2. How We Use Your Information
+We use your data to:
+- Provide and maintain the service
+- Improve the platform
+- Prevent abuse and illegal activities
+- Maintain security and stability
+- Comply with legal obligations
 
-Data Sharing:
-We do not sell your personal information. We may share information only with your consent, to comply with legal obligations, or with trusted service providers.
+3. Anonymity
+Posts can be made anonymously. Even if a post is anonymous, we may still store internal technical data for moderation, security, and legal compliance.
 
-Your Rights (GDPR):
-You have rights to access, rectification, erasure, portability, and objection regarding your personal data. You can delete your account from your Profile settings.
+4. Cookies
+We use cookies to ensure basic functionality and improve user experience.
 
-Data Security:
-We use industry-standard encryption and security audits to protect your data.`;
+5. Data Sharing
+We do not sell your personal data.
+We only share data if:
+- Required by law
+- Necessary to protect the platform or users
+- Necessary to operate the service (hosting, security, etc.)
+
+6. Data Storage
+Your data is stored securely. We take reasonable technical and organizational measures to protect it, but no system is 100% secure.
+
+7. Your Rights
+You have the right to:
+- Request access to your data
+- Request deletion of your data
+- Request correction of your data
+
+8. Account Deletion
+You can request deletion of your account and associated data.
+
+9. Changes to This Policy
+We may update this Privacy Policy. Continued use of the platform means you accept the changes.
+
+10. Contact
+contact@jobcrap.de`;
 
     const displayContent = content || defaultContent;
 
@@ -71,7 +97,7 @@ We use industry-standard encryption and security audits to protect your data.`;
                         </h1>
                         <p className="text-muted-foreground font-bold mt-2 uppercase tracking-widest text-xs flex items-center justify-center md:justify-start gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            Active Policy • December 2024
+                            Active Policy • January 2026
                         </p>
                     </div>
                 </div>
@@ -85,9 +111,13 @@ We use industry-standard encryption and security audits to protect your data.`;
                 <div className="relative z-10">
                     <div className="prose prose-lg dark:prose-invert max-w-none">
                         {displayContent.split('\n\n').map((paragraph, idx) => (
-                            <p key={idx} className="text-foreground/80 leading-relaxed mb-8 font-medium text-lg whitespace-pre-wrap">
-                                {paragraph}
-                            </p>
+                            <div key={idx} className="mb-8">
+                                {paragraph.split('\n').map((line, lIdx) => (
+                                    <p key={lIdx} className="text-foreground/80 leading-relaxed font-medium text-lg whitespace-pre-wrap mb-1">
+                                        {line}
+                                    </p>
+                                ))}
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -95,7 +125,7 @@ We use industry-standard encryption and security audits to protect your data.`;
 
             <div className="mt-12 text-center">
                 <p className="text-muted-foreground font-medium flex items-center justify-center gap-2">
-                    Questions? Reach out to <a href="mailto:privacy@jobcrap.com" className="text-primary font-black hover:underline underline-offset-4">privacy@jobcrap.com</a>
+                    Questions? Reach out to <a href="mailto:contact@jobcrap.de" className="text-primary font-black hover:underline underline-offset-4">contact@jobcrap.de</a>
                 </p>
             </div>
         </div>

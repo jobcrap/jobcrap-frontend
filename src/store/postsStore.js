@@ -18,6 +18,8 @@ export const usePostsStore = create((set, get) => ({
     sortBy: 'recent',
     selectedCategory: null,
     selectedCountry: null,
+    selectedTag: null,
+    searchQuery: '',
     isLoading: false,
     error: null,
     lastFetched: null,
@@ -25,7 +27,7 @@ export const usePostsStore = create((set, get) => ({
 
     // Actions
     fetchPosts: async (force = false) => {
-        const { posts, lastFetched, cacheExpiry, selectedCategory, selectedCountry, sortBy, pagination } = get();
+        const { posts, lastFetched, cacheExpiry, selectedCategory, selectedCountry, selectedTag, searchQuery, sortBy, pagination } = get();
 
         // Cache Check: Don't fetch if we have posts and they are fresh (and not forced)
         const now = Date.now();
@@ -40,6 +42,8 @@ export const usePostsStore = create((set, get) => ({
             let backendSort;
             if (sortBy === 'recent') backendSort = '-createdAt';
             if (sortBy === 'top') backendSort = '-upvotes';
+            if (sortBy === 'trending') backendSort = 'trending';
+            if (sortBy === 'discussed') backendSort = 'discussed';
             if (sortBy === 'controversial') backendSort = 'controversial';
 
             const params = {
@@ -47,6 +51,8 @@ export const usePostsStore = create((set, get) => ({
                 limit: pagination.limit,
                 category: selectedCategory,
                 country: selectedCountry,
+                tag: selectedTag,
+                search: searchQuery,
                 sort: backendSort
             };
 
@@ -73,7 +79,7 @@ export const usePostsStore = create((set, get) => ({
     },
 
     loadMorePosts: async () => {
-        const { pagination, isLoading, selectedCategory, selectedCountry, sortBy } = get();
+        const { pagination, isLoading, selectedCategory, selectedCountry, selectedTag, searchQuery, sortBy } = get();
 
         if (isLoading || !pagination.hasMore) return;
 
@@ -84,6 +90,8 @@ export const usePostsStore = create((set, get) => ({
             let backendSort;
             if (sortBy === 'recent') backendSort = '-createdAt';
             if (sortBy === 'top') backendSort = '-upvotes';
+            if (sortBy === 'trending') backendSort = 'trending';
+            if (sortBy === 'discussed') backendSort = 'discussed';
             if (sortBy === 'controversial') backendSort = 'controversial';
 
             const nextPage = pagination.page + 1;
@@ -92,6 +100,8 @@ export const usePostsStore = create((set, get) => ({
                 limit: pagination.limit,
                 category: selectedCategory,
                 country: selectedCountry,
+                tag: selectedTag,
+                search: searchQuery,
                 sort: backendSort
             };
 
@@ -203,6 +213,24 @@ export const usePostsStore = create((set, get) => ({
         get().fetchPosts(true);
     },
 
+    setTag: (tag) => {
+        set({
+            selectedTag: tag,
+            pagination: { ...get().pagination, page: 1 },
+            lastFetched: null
+        });
+        get().fetchPosts(true);
+    },
+
+    setSearchQuery: (query) => {
+        set({
+            searchQuery: query,
+            pagination: { ...get().pagination, page: 1 },
+            lastFetched: null
+        });
+        get().fetchPosts(true);
+    },
+
     setPage: (page) => {
         set(state => ({ pagination: { ...state.pagination, page } }));
         get().fetchPosts();
@@ -212,9 +240,11 @@ export const usePostsStore = create((set, get) => ({
         set({
             selectedCategory: null,
             selectedCountry: null,
+            selectedTag: null,
+            searchQuery: '',
             sortBy: 'recent',
             pagination: { ...get().pagination, page: 1 }
         });
-        get().fetchPosts();
+        get().fetchPosts(true);
     }
 }));

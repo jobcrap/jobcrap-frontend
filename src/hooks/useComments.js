@@ -28,13 +28,63 @@ export const useCreateComment = (storyId) => {
 
 export const useVoteComment = (storyId) => {
     const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: ({ commentId, type }) => commentsAPI.voteComment(commentId, type),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['comments', storyId] });
+        onMutate: async ({ commentId, type }) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ['comments', storyId] });
+
+            // Snapshot previous comments
+            const previousComments = queryClient.getQueryData(['comments', storyId]);
+
+            // Optimistically update
+            queryClient.setQueryData(['comments', storyId], (old) => {
+                if (!old) return old;
+
+                const getNewVoteState = (comment) => {
+                    const oldVote = comment.userVote;
+                    let newVote = type;
+                    let upvotes = comment.upvotes || 0;
+                    let downvotes = comment.downvotes || 0;
+
+                    if (oldVote === type) {
+                        newVote = null;
+                        if (type === 'upvote') upvotes = Math.max(0, upvotes - 1);
+                        else downvotes = Math.max(0, downvotes - 1);
+                    } else {
+                        if (oldVote === 'upvote') upvotes = Math.max(0, upvotes - 1);
+                        if (oldVote === 'downvote') downvotes = Math.max(0, downvotes - 1);
+
+                        if (type === 'upvote') upvotes += 1;
+                        if (type === 'downvote') downvotes += 1;
+                    }
+
+                    return { ...comment, userVote: newVote, upvotes, downvotes };
+                };
+
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        comments: (old.data.comments || []).map(c =>
+                            c._id === commentId ? getNewVoteState(c) : c
+                        )
+                    }
+                };
+            });
+
+            return { previousComments };
         },
-        onError: (error) => {
-            toast.error(error.response?.data?.message || 'Voting failed');
+        onError: (err, variables, context) => {
+            if (context?.previousComments) {
+                queryClient.setQueryData(['comments', storyId], context.previousComments);
+            }
+            toast.error(err.response?.data?.message || 'Voting failed');
+        },
+        onSettled: () => {
+            // Background sync
+            queryClient.invalidateQueries({ queryKey: ['comments', storyId] });
         }
     });
 };

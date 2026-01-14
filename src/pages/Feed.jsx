@@ -1,43 +1,141 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import { usePostsStore } from '@/store/postsStore';
 import { useAuthStore } from '@/store/authStore';
 import { useInfinitePosts, useVotePost } from '@/hooks/usePosts';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import PostCard from '@/components/post/PostCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { CATEGORIES, COUNTRIES } from '@/utils/constants';
-import { SlidersHorizontal, X, PenSquare, Loader2 } from 'lucide-react';
+import { SlidersHorizontal, X, PenSquare, Loader2, Search } from 'lucide-react';
 import { PostSkeleton } from '@/components/ui/skeleton';
 
 export default function Feed() {
-    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const queryClient = useQueryClient();
     const { isAuthenticated } = useAuthStore();
     const {
         selectedCategory,
         selectedCountry,
+        selectedTag,
         sortBy,
+        searchQuery,
         setCategory,
         setCountry,
+        setTag,
         setSortBy,
+        setSearchQuery,
         clearFilters
     } = usePostsStore();
+
+    const [localSearch, setLocalSearch] = useState(searchQuery || '');
+
+    // Sync URL params To Store on mount
+    useEffect(() => {
+        const urlCategory = searchParams.get('category');
+        const urlCountry = searchParams.get('country');
+        const urlTag = searchParams.get('tag');
+        const urlSort = searchParams.get('sort');
+        const urlSearch = searchParams.get('search');
+
+        if (urlCategory) setCategory(urlCategory);
+        if (urlCountry) setCountry(urlCountry);
+        if (urlTag) setTag(urlTag);
+        if (urlSort) setSortBy(urlSort);
+        if (urlSearch) {
+            setSearchQuery(urlSearch);
+            setLocalSearch(urlSearch);
+        }
+    }, []); // Run once on mount
+
+    // Debounced search update
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (localSearch !== searchQuery) {
+                setSearchQuery(localSearch);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [localSearch, searchQuery, setSearchQuery]);
+
+    // Sync Store To URL 
+    useEffect(() => {
+        const params = {};
+        if (selectedCategory) params.category = selectedCategory;
+        if (selectedCountry) params.country = selectedCountry;
+        if (selectedTag) params.tag = selectedTag;
+        if (sortBy) params.sort = sortBy;
+        if (searchQuery) params.search = searchQuery;
+
+        setSearchParams(params, { replace: true });
+
+        // Scroll to top when filters change
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Invalidate queries to ensure fresh data when switching filters
+        queryClient.invalidateQueries({ queryKey: ['posts', 'infinite'] });
+    }, [selectedCategory, selectedCountry, selectedTag, sortBy, searchQuery, setSearchParams, queryClient]);
 
     const {
         data,
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
+        isFetching,
         isLoading,
+        refetch,
         error
     } = useInfinitePosts({
         category: selectedCategory,
         country: selectedCountry,
-        sort: sortBy === 'recent' ? '-createdAt' : (sortBy === 'top' ? '-upvotes' : 'controversial')
+        tag: selectedTag,
+        search: searchQuery,
+        sort: sortBy === 'recent' ? '-createdAt' : (sortBy === 'top' ? '-upvotes' : (sortBy === 'trending' ? 'trending' : (sortBy === 'discussed' ? 'discussed' : 'controversial')))
     });
+
+    // Auto-refresh on scroll up at top (Pull-to-refresh style)
+    useEffect(() => {
+        let lastTouchY = 0;
+        let pullThreshold = 80;
+
+        const handleWheel = (e) => {
+            // Check if at top and scrolling UP (deltaY is negative)
+            if (window.scrollY <= 0 && e.deltaY < -50 && !isFetching) {
+                refetch();
+            }
+        };
+
+        const handleTouchStart = (e) => {
+            lastTouchY = e.touches[0].clientY;
+        };
+
+        const handleTouchMove = (e) => {
+            if (window.scrollY <= 0 && !isFetching) {
+                const currentY = e.touches[0].clientY;
+                const pullDistance = currentY - lastTouchY;
+                if (pullDistance > pullThreshold) {
+                    refetch();
+                    lastTouchY = currentY; // Reset to prevent multiple triggers
+                    toast.success('Refreshing feed...', { id: 'pull-refresh', duration: 1000 });
+                }
+            }
+        };
+
+        window.addEventListener('wheel', handleWheel, { passive: true });
+        window.addEventListener('touchstart', handleTouchStart, { passive: true });
+        window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+        return () => {
+            window.removeEventListener('wheel', handleWheel);
+            window.removeEventListener('touchstart', handleTouchStart);
+            window.removeEventListener('touchmove', handleTouchMove);
+        };
+    }, [isFetching, refetch]);
 
     const voteMutation = useVotePost();
 
@@ -68,7 +166,7 @@ export default function Feed() {
         voteMutation.mutate({ id: postId, type: voteType });
     };
 
-    const hasActiveFilters = selectedCategory || selectedCountry;
+    const hasActiveFilters = selectedCategory || selectedCountry || selectedTag || searchQuery;
 
     return (
         <div className="max-w-[1400px] mx-auto">
@@ -98,28 +196,91 @@ export default function Feed() {
                                 </Badge>
                             </div>
                         </div>
+
+                        {/* Search Bar - Facebook Style with Premium Polish */}
+                        <div className="mt-8 relative max-w-xl group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                value={localSearch}
+                                onChange={(e) => setLocalSearch(e.target.value)}
+                                placeholder="Search stories or hashtags..."
+                                className="block w-full pl-11 pr-12 py-4 bg-background/60 backdrop-blur-xl border border-border/40 rounded-[2rem] text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all shadow-lg shadow-black/5"
+                            />
+                            {localSearch && (
+                                <button
+                                    onClick={() => {
+                                        setLocalSearch('');
+                                        setSearchQuery('');
+                                    }}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
                         {/* Decorative background element */}
                         <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50"></div>
                     </div>
 
                     {/* Posts Feed */}
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold tracking-tight">Top Stories</h2>
-                        <div className="h-px flex-1 bg-border/40 mx-4 hidden sm:block"></div>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-bold tracking-tight">
+                                {selectedTag ? `#${selectedTag}` : 'Top Stories'}
+                            </h2>
+                            {selectedTag && (
+                                <Badge
+                                    variant="secondary"
+                                    className="cursor-pointer hover:bg-destructive hover:text-white transition-colors"
+                                    onClick={() => setTag(null)}
+                                >
+                                    <X className="w-3 h-3 mr-1" /> Clear Tag
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="h-px w-24 bg-border/40 hidden sm:block"></div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => refetch()}
+                                className="text-xs font-bold text-muted-foreground hover:text-primary"
+                                disabled={isFetching}
+                            >
+                                {isFetching ? 'Refreshing...' : 'Refresh'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Refreshing Indicator / Pull-to-refresh replacement */}
+                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isFetching && !isLoading && !isFetchingNextPage ? 'h-12 opacity-100' : 'h-0 opacity-0'}`}>
+                        <div className="flex items-center justify-center gap-2 bg-primary/5 border border-primary/10 rounded-2xl h-10 animate-pulse">
+                            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                            <span className="text-xs font-bold text-primary uppercase tracking-[0.2em]">Updating rankings...</span>
+                        </div>
                     </div>
 
                     {isLoading && posts.length === 0 ? (
-                        <div className="text-center py-10">Loading stories...</div>
+                        <div className="space-y-6">
+                            {[1, 2, 3].map((n) => (
+                                <PostSkeleton key={n} />
+                            ))}
+                        </div>
                     ) : posts && posts.length > 0 ? (
-                        posts.map((post, index) => (
-                            <div
-                                key={post._id}
-                                className="animate-fade-in-up"
-                                style={{ animationDelay: `${index * 100}ms` }}
-                            >
-                                <PostCard post={post} onVote={handleVote} />
-                            </div>
-                        ))
+                        <div className="space-y-8">
+                            {posts.map((post, index) => (
+                                <div
+                                    key={post._id}
+                                    className="animate-fade-in-up"
+                                    style={{ animationDelay: `${index * 50}ms` }}
+                                >
+                                    <PostCard post={post} onVote={handleVote} />
+                                </div>
+                            ))}
+                        </div>
                     ) : (
                         <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 transition-colors">
                             <div className="text-6xl mb-4">📭</div>
@@ -185,6 +346,8 @@ export default function Feed() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="recent">🕐 Recent</SelectItem>
+                                            <SelectItem value="trending">📈 Trending</SelectItem>
+                                            <SelectItem value="discussed">💬 Most Discussed</SelectItem>
                                             <SelectItem value="top">🔥 Top Rated</SelectItem>
                                             <SelectItem value="controversial">⚡ Controversial</SelectItem>
                                         </SelectContent>

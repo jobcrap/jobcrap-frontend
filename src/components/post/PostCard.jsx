@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { CATEGORIES } from '@/utils/constants';
 import { formatDate } from '@/utils/validation';
 import { postsAPI } from '@/services/api.service';
+import { usePostsStore } from '@/store/postsStore';
 import ReportModal from './ReportModal';
 import ShareModal from './ShareModal';
 
@@ -19,6 +20,7 @@ export default function PostCard({ post, onVote, showFullText = false }) {
     const [showReportModal, setShowReportModal] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const { setTag } = usePostsStore();
 
     const category = CATEGORIES.find(c => c.value === post.category);
 
@@ -107,9 +109,29 @@ export default function PostCard({ post, onVote, showFullText = false }) {
                             </div>
                         </div>
                     ) : (
-                        <p className="text-foreground/90 leading-relaxed text-[16px] whitespace-pre-wrap font-normal tracking-tight">
+                        <p className="text-foreground/90 leading-relaxed text-[16px] whitespace-pre-wrap font-normal tracking-tight mb-4">
                             {showFullText || isExpanded ? displayText : displayText.substring(0, 280) + (displayText.length > 280 ? '...' : '')}
                         </p>
+                    )}
+
+                    {/* Tags */}
+                    {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {post.tags.map((tag) => (
+                                <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setTag(tag);
+                                    }}
+                                    className="cursor-pointer bg-primary/5 hover:bg-primary/10 text-primary dark:bg-primary/20 dark:text-white border-transparent text-[11px] font-bold px-2.5 py-0.5 rounded-full transition-all"
+                                >
+                                    #{tag}
+                                </Badge>
+                            ))}
+                        </div>
                     )}
                     {/* Read More / Less Toggle */}
                     {!showFullText && displayText.length > 280 && (
@@ -215,7 +237,7 @@ export default function PostCard({ post, onVote, showFullText = false }) {
                                 className="flex items-center gap-1.5 h-9 px-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
                                 <MessageCircle className="w-4 h-4" />
-                                <span className="text-sm font-medium">{post.commentsCount || 0}</span>
+                                <span className="text-sm font-medium">{post.commentCount || 0}</span>
                             </Button>
                         </Link>
 

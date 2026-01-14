@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CATEGORIES, TRIGGER_WARNINGS, POST_LIMITS, COUNTRIES } from '@/utils/constants';
 import { validatePostContent, countSentences } from '@/utils/validation';
-import { PenSquare, AlertCircle, Check, ChevronsUpDown, Eye, ShieldCheck, Clock, Globe, ThumbsUp, MessageCircle, Share2, ShieldQuestion } from 'lucide-react';
+import { PenSquare, AlertCircle, Check, ChevronsUpDown, Eye, ShieldCheck, Clock, Globe, ThumbsUp, MessageCircle, Share2, ShieldQuestion, Tag, X } from 'lucide-react';
 import { PostSkeleton } from '@/components/ui/skeleton';
 import { countries } from 'countries-list';
 import {
@@ -54,8 +54,10 @@ export default function CreatePost() {
         category: '',
         text: '',
         triggerWarnings: [],
+        tags: [],
         isAnonymous: false
     });
+    const [tagInput, setTagInput] = useState('');
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [errors, setErrors] = useState({});
@@ -81,6 +83,24 @@ export default function CreatePost() {
             triggerWarnings: prev.triggerWarnings.includes(warning)
                 ? prev.triggerWarnings.filter(w => w !== warning)
                 : [...prev.triggerWarnings, warning]
+        }));
+    };
+
+    const handleAddTag = (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const tag = tagInput.trim().toLowerCase();
+            if (tag && !formData.tags.includes(tag)) {
+                setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
+                setTagInput('');
+            }
+        }
+    };
+
+    const handleRemoveTag = (tagToRemove) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(t => t !== tagToRemove)
         }));
     };
 
@@ -297,6 +317,42 @@ export default function CreatePost() {
                                 </div>
                             </div>
 
+                            {/* Tags Section */}
+                            <div className="space-y-4">
+                                <Label className="text-sm font-bold ml-1 flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-primary" /> Topic Tags
+                                </Label>
+                                <div className="space-y-3">
+                                    <div className="relative group">
+                                        <Input
+                                            value={tagInput}
+                                            onChange={(e) => setTagInput(e.target.value)}
+                                            onKeyDown={handleAddTag}
+                                            placeholder="Add tags (e.g. IT, boss, burnout) and press Enter"
+                                            className="rounded-2xl border-border/40 bg-background/50 h-12 focus:ring-primary/20"
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.tags.map((tag) => (
+                                            <Badge
+                                                key={tag}
+                                                variant="secondary"
+                                                className="pl-3 pr-2 py-1.5 rounded-full bg-primary/10 text-primary dark:bg-primary/20 dark:text-white border-0 hover:bg-primary/20 transition-all font-bold gap-2 group/tag"
+                                            >
+                                                #{tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveTag(tag)}
+                                                    className="p-0.5 hover:bg-red-500 hover:text-white rounded-full transition-colors"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Trigger Warnings */}
                             <div className="space-y-4">
                                 <Label className="text-sm font-bold ml-1 flex items-center gap-2">
@@ -407,6 +463,14 @@ export default function CreatePost() {
                                     <div className="flex flex-wrap gap-2 pt-2">
                                         {formData.triggerWarnings.map(tw => (
                                             <span key={tw} className="text-[10px] font-black uppercase text-amber-500/80 tracking-tighter">⚠️ {tw}</span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {formData.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {formData.tags.map(tag => (
+                                            <span key={tag} className="text-xs font-bold text-primary/70 dark:text-white/80">#{tag}</span>
                                         ))}
                                     </div>
                                 )}

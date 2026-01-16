@@ -19,7 +19,7 @@ export default function Register() {
 
     useEffect(() => {
         clearError();
-    }, []);
+    }, [clearError]);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -275,7 +275,7 @@ export default function Register() {
 
                         <Button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isLoading || !formData.agreeToTerms}
                             className="w-full h-14 rounded-2xl text-base font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98] bg-primary group"
                         >
                             {isLoading ? "Creating Account..." : (

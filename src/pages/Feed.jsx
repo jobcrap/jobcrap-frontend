@@ -15,6 +15,7 @@ import { SlidersHorizontal, X, PenSquare, Loader2, Search } from 'lucide-react';
 import { PostSkeleton } from '@/components/ui/skeleton';
 
 export default function Feed() {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const queryClient = useQueryClient();
     const { isAuthenticated } = useAuthStore();
@@ -32,7 +33,7 @@ export default function Feed() {
         clearFilters
     } = usePostsStore();
 
-    const [localSearch, setLocalSearch] = useState(searchQuery || '');
+    const [localSearch, setLocalSearch] = useState(searchParams.get('search') || searchQuery || '');
 
     // Sync URL params To Store on mount
     useEffect(() => {
@@ -48,8 +49,8 @@ export default function Feed() {
         if (urlSort) setSortBy(urlSort);
         if (urlSearch) {
             setSearchQuery(urlSearch);
-            setLocalSearch(urlSearch);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Run once on mount
 
     // Debounced search update
@@ -88,8 +89,7 @@ export default function Feed() {
         isFetchingNextPage,
         isFetching,
         isLoading,
-        refetch,
-        error
+        refetch
     } = useInfinitePosts({
         category: selectedCategory,
         country: selectedCountry,
@@ -148,6 +148,7 @@ export default function Feed() {
     });
 
     const [showFilters, setShowFilters] = useState(false);
+    const hasActiveFilters = selectedCategory || selectedCountry || selectedTag || searchQuery || (sortBy && sortBy !== 'recent');
 
     useEffect(() => {
         if (inView && hasNextPage && !isFetchingNextPage) {
@@ -166,7 +167,7 @@ export default function Feed() {
         voteMutation.mutate({ id: postId, type: voteType });
     };
 
-    const hasActiveFilters = selectedCategory || selectedCountry || selectedTag || searchQuery;
+
 
     return (
         <div className="max-w-[1400px] mx-auto">
@@ -241,7 +242,17 @@ export default function Feed() {
                                 </Badge>
                             )}
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`lg:hidden h-8 text-xs font-bold gap-2 ${showFilters ? 'bg-primary text-white border-primary' : 'bg-background/50 backdrop-blur border-border/40'}`}
+                            >
+                                <SlidersHorizontal className="w-3.5 h-3.5" />
+                                Filters
+                                {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
+                            </Button>
                             <div className="h-px w-24 bg-border/40 hidden sm:block"></div>
                             <Button
                                 variant="ghost"
@@ -254,6 +265,80 @@ export default function Feed() {
                             </Button>
                         </div>
                     </div>
+
+                    {/* Mobile Filters Panel */}
+                    {showFilters && (
+                        <div className="lg:hidden mt-4 p-4 bg-card border border-border/40 rounded-2xl shadow-lg space-y-4 mb-6 relative z-10">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Filters</span>
+                                {hasActiveFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            clearFilters();
+                                            setShowFilters(false);
+                                        }}
+                                        className="h-6 text-[10px] uppercase font-bold text-muted-foreground hover:text-primary px-2"
+                                    >
+                                        Reset All
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {/* Sort */}
+                                <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="w-full bg-background/50 border-border/40 h-10 text-sm">
+                                        <SelectValue placeholder="Sort By" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[100] bg-popover/95 backdrop-blur-lg">
+                                        <SelectItem value="recent">🕐 Recent</SelectItem>
+                                        <SelectItem value="trending">📈 Trending</SelectItem>
+                                        <SelectItem value="discussed">💬 Most Discussed</SelectItem>
+                                        <SelectItem value="top">🔥 Top Rated</SelectItem>
+                                        <SelectItem value="controversial">⚡ Controversial</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                {/* Category */}
+                                <Select
+                                    value={selectedCategory || 'all'}
+                                    onValueChange={(value) => setCategory(value === 'all' ? null : value)}
+                                >
+                                    <SelectTrigger className="w-full bg-background/50 border-border/40 h-10 text-sm">
+                                        <SelectValue placeholder="Category" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[100] bg-popover/95 backdrop-blur-lg">
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {CATEGORIES.map(cat => (
+                                            <SelectItem key={cat.value} value={cat.value}>
+                                                {cat.emoji} {cat.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                {/* Country */}
+                                <Select
+                                    value={selectedCountry || 'all'}
+                                    onValueChange={(value) => setCountry(value === 'all' ? null : value)}
+                                >
+                                    <SelectTrigger className="w-full bg-background/50 border-border/40 h-10 text-sm">
+                                        <SelectValue placeholder="Country" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[100] bg-popover/95 backdrop-blur-lg">
+                                        <SelectItem value="all">All Countries</SelectItem>
+                                        {COUNTRIES.map(country => (
+                                            <SelectItem key={country.value} value={country.value}>
+                                                {country.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Refreshing Indicator / Pull-to-refresh replacement */}
                     <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isFetching && !isLoading && !isFetchingNextPage ? 'h-12 opacity-100' : 'h-0 opacity-0'}`}>

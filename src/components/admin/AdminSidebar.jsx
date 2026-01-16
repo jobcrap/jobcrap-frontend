@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
 import { useAuthStore } from '@/store/authStore';
 
 export default function AdminSidebar({
@@ -19,9 +20,9 @@ export default function AdminSidebar({
     onTabChange,
     isCollapsed,
     setIsCollapsed,
-    isMobileOpen,
     setIsMobileOpen
 }) {
+    const { user } = useAuthStore();
     const menuItems = [
         { id: 'feed', label: 'Main Feed', icon: LayoutDashboard, color: 'text-indigo-500' },
         { id: 'create', label: 'Create Story', icon: FileText, color: 'text-pink-500' },
@@ -36,7 +37,7 @@ export default function AdminSidebar({
         { id: 'settings', label: 'Site Settings', icon: Settings, color: 'text-gray-500' },
     ];
 
-    const SidebarContent = () => (
+    const renderSidebarContent = () => (
         <div className="flex flex-col h-full py-6">
             {/* Desktop Collapse Toggle */}
             <Button
@@ -117,7 +118,7 @@ export default function AdminSidebar({
                             )}
 
                             {/* Tooltip for collapsed state or mobile */}
-                            {(isCollapsed || true) && (
+                            {isCollapsed && (
                                 <div className={cn(
                                     "absolute left-full ml-4 px-3 py-1.5 bg-foreground text-background text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0 z-50 shadow-xl",
                                     !isActive && "md:block",
@@ -140,14 +141,14 @@ export default function AdminSidebar({
                     <div className="hidden md:flex items-center gap-3 p-3 rounded-2xl bg-secondary/30 border border-border/40 animate-fade-in-up">
                         <div className="w-10 h-10 rounded-xl bg-primary/20 p-0.5 shadow-inner flex-shrink-0">
                             <img
-                                src={useAuthStore().user?.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                                src={user?.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
                                 alt="Admin"
                                 className="w-full h-full object-cover rounded-[10px]"
                             />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-xs font-black truncate text-foreground tracking-tight">
-                                {useAuthStore().user?.username || 'Administrator'}
+                                {user?.username || 'Administrator'}
                             </p>
                             <div className="flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -177,7 +178,7 @@ export default function AdminSidebar({
                     isCollapsed ? "md:w-20" : "md:w-72"
                 )}
             >
-                <SidebarContent />
+                {renderSidebarContent()}
             </aside>
         </>
     );

@@ -1,7 +1,7 @@
 import React from 'react';
 import AdminDataTable from '../AdminDataTable';
 
-export default function UsersTab({ users, type, onAction, onNavigate, isLoading }) {
+export default function UsersTab({ users, onAction, onNavigate, isLoading }) {
     return (
         <AdminDataTable
             type="users"

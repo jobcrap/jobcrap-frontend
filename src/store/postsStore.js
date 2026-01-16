@@ -129,7 +129,7 @@ export const usePostsStore = create((set, get) => ({
     addPost: async (postData) => {
         set({ isLoading: true });
         try {
-            const data = await postsAPI.createPost(postData);
+            await postsAPI.createPost(postData);
             // Re-fetch to ensure order/consistency or prepend
             // set((state) => ({ posts: [data.data, ...state.posts], isLoading: false }));
             await get().fetchPosts(true); // Force fetch to update cache and clear loading state

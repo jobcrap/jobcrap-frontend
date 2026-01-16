@@ -28,6 +28,7 @@ export default function SettingsTab() {
 
     useEffect(() => {
         fetchSettings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchSettings = async () => {
@@ -58,7 +59,7 @@ export default function SettingsTab() {
         try {
             await settingsAPI.updateSetting(key, settings[key]);
             toast.success('Setting updated successfully');
-        } catch (error) {
+        } catch {
             toast.error('Failed to update setting');
         } finally {
             setIsSaving(false);

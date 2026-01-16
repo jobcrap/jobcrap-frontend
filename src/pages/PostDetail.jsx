@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
@@ -15,6 +16,7 @@ import { formatDate } from '@/utils/validation';
 import ShareModal from '@/components/post/ShareModal';
 import ReportModal from '@/components/post/ReportModal';
 import { PostSkeleton, CommentSkeleton } from '@/components/ui/skeleton';
+import { SUPPORTED_LANGUAGES } from '@/utils/languages';
 
 export default function PostDetail() {
     const { id } = useParams();
@@ -37,16 +39,44 @@ export default function PostDetail() {
     const [showShareModal, setShowShareModal] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('en');
+    const [translations, setTranslations] = useState({});
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [showLangMenu, setShowLangMenu] = useState(false);
     const [isShareMode, setIsShareMode] = useState(false);
+    const langMenuRef = useRef(null);
+    const buttonRef = useRef(null);
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
     useEffect(() => {
         if (post?.triggerWarnings?.length > 0) {
             setIsBlurred(true);
         }
-        if (post?.originalLanguage) {
-            setSelectedLanguage(post.originalLanguage);
-        }
     }, [post]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
+                setShowLangMenu(false);
+            }
+        };
+
+        if (showLangMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showLangMenu]);
+
+    // Update dropdown position when menu opens
+    useEffect(() => {
+        if (showLangMenu && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownPosition({
+                top: rect.bottom + window.scrollY + 8,
+                left: rect.left + window.scrollX
+            });
+        }
+    }, [showLangMenu]);
 
     if (isPostLoading) return (
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">
@@ -81,12 +111,47 @@ export default function PostDetail() {
         });
     };
 
-    const handleLanguageChange = (lang) => {
-        setSelectedLanguage(lang);
+    const isMultiLanguage = post.originalLanguage && post.originalLanguage !== 'en';
+
+    const getDisplayText = () => {
+        if (selectedLanguage === 'original' && post.originalText) {
+            return post.originalText;
+        }
+        if (selectedLanguage === 'en' || selectedLanguage === post.originalLanguage) {
+            return post.text;
+        }
+        return translations[selectedLanguage] || post.text;
     };
 
-    const displayText = post.translations?.[selectedLanguage] || post.text;
-    const isTranslated = selectedLanguage !== post.originalLanguage;
+    const displayText = getDisplayText();
+
+    const handleLanguageChange = async (langCode) => {
+        setSelectedLanguage(langCode);
+        setShowLangMenu(false);
+
+        if (langCode === 'original' || langCode === 'en' || langCode === post.originalLanguage) {
+            return;
+        }
+
+        if (translations[langCode]) {
+            return;
+        }
+
+        setIsTranslating(true);
+        try {
+            const sourceText = post.originalText || post.text;
+            const result = await postsAPI.translateText(sourceText, langCode);
+            setTranslations(prev => ({
+                ...prev,
+                [langCode]: result.data.translated
+            }));
+        } catch {
+            toast.error('Translation failed');
+            setSelectedLanguage('en');
+        } finally {
+            setIsTranslating(false);
+        }
+    };
 
     const handleCommentVote = async (commentId, voteType) => {
         if (!isAuthenticated) {
@@ -203,7 +268,7 @@ export default function PostDetail() {
             </div>
 
             {/* Post Card - Same UI as PostCard */}
-            <Card className="overflow-hidden border-border/40 bg-card/60 backdrop-blur-md shadow-2xl rounded-3xl">
+            <Card className="overflow-visible border-border/40 bg-card/60 backdrop-blur-md shadow-2xl rounded-3xl">
                 <div className="p-4 sm:p-5">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3 mb-3">
@@ -251,27 +316,19 @@ export default function PostDetail() {
 
                     {/* Post Content */}
                     <div className={`mb-6 relative ${isBlurred ? 'blur-md select-none pointer-events-none' : ''}`}>
-                        {isTranslated ? (
+                        {selectedLanguage === 'original' && post.originalText ? (
                             <div className="space-y-6">
                                 {/* Original Text */}
-                                <div className="relative pl-4 border-l-2 border-muted">
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Original Context</span>
-                                    <p className="text-foreground/60 leading-relaxed text-[14px] italic">
-                                        {post.text}
-                                    </p>
-                                </div>
-
-                                {/* Translated Text */}
                                 <div className="relative pl-4 border-l-2 border-primary/30">
-                                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 block tracking-tight">English Translation</span>
-                                    <p className="text-foreground/90 leading-relaxed text-base font-medium">
-                                        {displayText}
+                                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 block tracking-tight">Original Perspective</span>
+                                    <p className="text-foreground/90 leading-relaxed text-base font-medium whitespace-pre-wrap">
+                                        {post.originalText}
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-foreground/90 dark:text-gray-200 leading-relaxed text-base tracking-tight">
-                                {displayText}
+                            <p className="text-foreground/90 dark:text-gray-200 leading-relaxed text-base tracking-tight whitespace-pre-wrap">
+                                {post.text}
                             </p>
                         )}
                     </div>
@@ -290,42 +347,67 @@ export default function PostDetail() {
                             ))}
                         </div>
                     )}
-                    {post.originalLanguage && post.originalLanguage !== 'en' && (
-                        <div className="mb-4 flex items-center gap-2">
+                    {/* Language Selector */}
+                    <div className="mb-4 relative">
+                        <div className="flex items-center gap-2" ref={buttonRef}>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={async () => {
-                                    if (isTranslated) {
-                                        setSelectedLanguage(post.originalLanguage);
-                                    } else {
-                                        // Check if we already have the translation cached
-                                        if (post.translations?.en) {
-                                            setSelectedLanguage('en');
-                                        } else {
-                                            try {
-                                                const result = await postsAPI.translateText(post.text, 'en');
-                                                // Store translation in state
-                                                setPost(prev => ({
-                                                    ...prev,
-                                                    translations: {
-                                                        ...prev.translations,
-                                                        en: result.data.translated
-                                                    }
-                                                }));
-                                                setSelectedLanguage('en');
-                                            } catch (err) {
-                                                toast.error('Translation failed');
-                                            }
-                                        }
-                                    }
-                                }}
+                                onClick={() => setShowLangMenu(!showLangMenu)}
+                                disabled={isTranslating}
                                 className="h-8 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 gap-1.5 px-3 rounded-full"
                             >
                                 <Globe className="w-3.5 h-3.5" />
-                                {isTranslated ? 'Show Original' : 'Translate to English'}
+                                {isTranslating ? 'Translating...' : (selectedLanguage === 'original' ? 'Original' : (SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage)?.name || 'English'))}
                             </Button>
+
+                            {isMultiLanguage && selectedLanguage !== 'original' && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleLanguageChange('original')}
+                                    className="h-8 text-xs px-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                                >
+                                    View Original
+                                </Button>
+                            )}
+
+                            {selectedLanguage === 'original' && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleLanguageChange('en')}
+                                    className="h-8 text-xs px-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                                >
+                                    View Translation
+                                </Button>
+                            )}
                         </div>
+                    </div>
+
+                    {/* Language Dropdown Portal */}
+                    {showLangMenu && createPortal(
+                        <div
+                            ref={langMenuRef}
+                            className="absolute bg-white dark:bg-gray-900 border-2 border-primary/30 rounded-xl shadow-2xl z-[99999] min-w-[220px] max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent backdrop-blur-xl"
+                            style={{
+                                top: `${dropdownPosition.top}px`,
+                                left: `${dropdownPosition.left}px`
+                            }}
+                        >
+                            {SUPPORTED_LANGUAGES.filter(l => l.code !== 'original').map((lang) => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => handleLanguageChange(lang.code)}
+                                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors flex items-center gap-2 ${selectedLanguage === lang.code ? 'bg-primary/10 text-primary font-bold' : 'text-foreground'
+                                        }`}
+                                >
+                                    <span className="text-base">{lang.flag}</span>
+                                    <span>{lang.name}</span>
+                                </button>
+                            ))}
+                        </div>,
+                        document.body
                     )}
 
                     {/* Actions Bar - Left Aligned */}
@@ -402,45 +484,47 @@ export default function PostDetail() {
                         </Button>
                     </div>
                 </div>
-            </Card>
+            </Card >
 
             {/* Comments Section */}
-            <div className="mt-8" id="comments-section">
+            < div className="mt-8" id="comments-section" >
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                     Comments ({comments.length})
                 </h2>
 
                 {/* Add Comment */}
-                {isAuthenticated ? (
-                    <Card className="p-6 mb-6 shadow-md border-gray-200 dark:border-gray-800 dark:bg-gray-900">
-                        <Textarea
-                            placeholder="Share your thoughts..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            rows={3}
-                            className="mb-3 resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                        />
-                        <Button
-                            onClick={handleAddComment}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                            disabled={!newComment.trim()}
-                        >
-                            <Send className="w-4 h-4 mr-2" />
-                            Post Comment
-                        </Button>
-                    </Card>
-                ) : (
-                    <Card className="p-6 mb-6 text-center border-gray-200 dark:border-gray-800 dark:bg-gray-900">
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            Please login to comment on this story
-                        </p>
-                        <Link to="/login">
-                            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                                Login to Comment
+                {
+                    isAuthenticated ? (
+                        <Card className="p-6 mb-6 shadow-md border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+                            <Textarea
+                                placeholder="Share your thoughts..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                rows={3}
+                                className="mb-3 resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            />
+                            <Button
+                                onClick={handleAddComment}
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                disabled={!newComment.trim()}
+                            >
+                                <Send className="w-4 h-4 mr-2" />
+                                Post Comment
                             </Button>
-                        </Link>
-                    </Card>
-                )}
+                        </Card>
+                    ) : (
+                        <Card className="p-6 mb-6 text-center border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                Please login to comment on this story
+                            </p>
+                            <Link to="/login">
+                                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                                    Login to Comment
+                                </Button>
+                            </Link>
+                        </Card>
+                    )
+                }
 
                 {/* Comments List */}
                 <div className="space-y-4">
@@ -513,23 +597,24 @@ export default function PostDetail() {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
 
             {/* Report Modal */}
-            <ReportModal
+            < ReportModal
                 isOpen={showReportModal}
-                onClose={() => setShowReportModal(false)}
+                onClose={() => setShowReportModal(false)
+                }
                 postId={post._id}
             />
 
             {/* Share Modal */}
-            <ShareModal
+            < ShareModal
                 isOpen={showShareModal}
                 onClose={() => setShowShareModal(false)}
                 postId={post._id}
                 profession={post.profession}
                 country={post.country}
             />
-        </div>
+        </div >
     );
 }

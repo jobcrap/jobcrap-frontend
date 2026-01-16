@@ -20,7 +20,7 @@ export default function Login() {
 
     useEffect(() => {
         clearError();
-    }, []);
+    }, [clearError]);
 
     const [formData, setFormData] = useState({
         email: '',

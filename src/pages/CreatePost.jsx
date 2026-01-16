@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { useCreatePost } from '@/hooks/usePosts';
 import { cn } from '@/lib/utils';
@@ -136,10 +135,9 @@ export default function CreatePost() {
         });
     };
 
-    const charCount = formData.text.length;
+
     const sentenceCount = countSentences(formData.text);
-    const isCharLimitClose = charCount > POST_LIMITS.MAX_CHARACTERS * 0.8;
-    const isSentenceLimitClose = sentenceCount > POST_LIMITS.MAX_SENTENCES * 0.8;
+
 
     return (
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">

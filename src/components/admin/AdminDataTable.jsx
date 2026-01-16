@@ -3,17 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    MoreVertical,
     Trash2,
     Eye,
     Ban,
     CheckCircle,
     User,
     Mail,
-    Calendar,
-    ArrowUpDown
+    Calendar
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function AdminDataTable({
     data,

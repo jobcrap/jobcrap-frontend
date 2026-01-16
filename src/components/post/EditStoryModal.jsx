@@ -27,6 +27,7 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
 
     useEffect(() => {
         if (story) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData({
                 profession: story.profession || '',
                 country: story.country || '',

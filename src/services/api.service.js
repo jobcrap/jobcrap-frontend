@@ -67,7 +67,7 @@ export const postsAPI = {
         return response.data;
     },
 
-    updatePost: async (id, postData) => {
+    updatePost: async () => {
         // Backend might not have PUT /stories/:id implemented yet? 
         // Checked backend: NO update endpoint. Only delete.
         // Assuming update is not available or ignored for now.

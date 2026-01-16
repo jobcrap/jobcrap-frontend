@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { User, Mail, Trash2, Save, Camera, Loader2, Shield } from 'lucide-react';
+import { User, Mail, Shield, Camera, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useUpdateProfile } from '@/hooks/useAuth';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -26,6 +26,7 @@ export default function Profile() {
     // Update formData when user data is fetched or changes
     useEffect(() => {
         if (user) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData({
                 username: user.username || '',
                 email: user.email || '',
@@ -36,7 +37,6 @@ export default function Profile() {
 
     const isLoading = updateProfileMutation.isPending;
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
     const [isPasswordLoading, setIsPasswordLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -66,7 +66,6 @@ export default function Profile() {
         }
 
         setIsUploading(true);
-        setUploadProgress(0);
 
         try {
             const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
@@ -87,8 +86,8 @@ export default function Profile() {
 
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
-                    const progress = (event.loaded / event.total) * 100;
-                    setUploadProgress(progress);
+                    // const progress = (event.loaded / event.total) * 100;
+                    // setUploadProgress(progress);
                 }
             };
 
@@ -99,7 +98,6 @@ export default function Profile() {
 
                     setFormData(prev => ({ ...prev, avatar: newAvatar }));
                     setIsUploading(false);
-                    setUploadProgress(0);
 
                     // Automatically save to database
                     try {

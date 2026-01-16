@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { adminAPI } from '@/services/api.service';
-import { cn } from '@/lib/utils';
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 // New Modular Components
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -95,7 +94,7 @@ export default function AdminPanel() {
                 ...prev,
                 posts: { page, total: res.data.pagination.totalItems }
             }));
-        } catch (error) {
+        } catch {
             toast.error('Failed to load stories');
         } finally {
             setIsLoading(false);
@@ -111,7 +110,7 @@ export default function AdminPanel() {
                 ...prev,
                 users: { page, total: res.data.pagination.totalItems }
             }));
-        } catch (error) {
+        } catch {
             toast.error('Failed to load users');
         } finally {
             setIsLoading(false);
@@ -127,7 +126,7 @@ export default function AdminPanel() {
                 ...prev,
                 reports: { page, total: res.data.pagination.totalItems }
             }));
-        } catch (error) {
+        } catch {
             toast.error('Failed to load reports');
         } finally {
             setIsLoading(false);
@@ -166,7 +165,7 @@ export default function AdminPanel() {
                         await adminAPI.deleteStory(item._id);
                         setPosts(posts.filter(p => p._id !== item._id));
                         toast.success('Deleted successfully');
-                    } catch (err) { toast.error('Action failed'); }
+                    } catch { toast.error('Action failed'); }
                 }
             });
         } else if (action === 'block') {
@@ -181,7 +180,7 @@ export default function AdminPanel() {
                         await adminAPI.toggleBlockUser(item._id);
                         setUsers(users.map(u => u._id === item._id ? { ...u, isBlocked: true } : u));
                         toast.success('User blocked');
-                    } catch (err) { toast.error('Action failed'); }
+                    } catch { toast.error('Action failed'); }
                 }
             });
         } else if (action === 'unblock') {
@@ -189,12 +188,12 @@ export default function AdminPanel() {
         }
     };
 
-    const handleUnblockUser = async (userId, userEmail) => {
+    const handleUnblockUser = async (userId) => {
         try {
             await adminAPI.toggleBlockUser(userId);
             setUsers(users.map(u => u._id === userId ? { ...u, isBlocked: false } : u));
             toast.success('User unblocked');
-        } catch (err) { toast.error('Action failed'); }
+        } catch { toast.error('Action failed'); }
     };
 
     const handleApprovePost = async (postId) => {
@@ -202,7 +201,7 @@ export default function AdminPanel() {
             await adminAPI.updateStoryStatus(postId, 'approved');
             setPosts(posts.filter(p => p._id !== postId));
             toast.success('Approved');
-        } catch (err) { toast.error('Action failed'); }
+        } catch { toast.error('Action failed'); }
     };
 
     const handleDismissReport = async (reportId) => {
@@ -210,7 +209,7 @@ export default function AdminPanel() {
             await adminAPI.updateReportStatus(reportId, 'resolved');
             setReports(reports.filter(r => r._id !== reportId));
             toast.success('Report dismissed');
-        } catch (err) { toast.error('Action failed'); }
+        } catch { toast.error('Action failed'); }
     };
 
     const handleDeleteReportedPost = (reportId, postId) => {
@@ -227,7 +226,7 @@ export default function AdminPanel() {
                     setPosts(posts.filter(p => p._id !== postId));
                     setReports(reports.filter(r => r._id !== reportId));
                     toast.success('Content removed');
-                } catch (err) { toast.error('Action failed'); }
+                } catch { toast.error('Action failed'); }
             }
         });
     };

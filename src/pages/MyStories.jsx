@@ -6,8 +6,9 @@ import toast from 'react-hot-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Flag, MessageCircle, Eye, Clock, ShieldCheck, ThumbsUp } from 'lucide-react';
+import { Edit, Trash2, Flag, MessageCircle, Eye, Clock, ShieldCheck, ThumbsUp, MapPin } from 'lucide-react';
 import { CATEGORIES } from '@/utils/constants';
+import { countries } from 'countries-list';
 import { formatDate } from '@/utils/validation';
 import EditStoryModal from '@/components/post/EditStoryModal';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -80,30 +81,11 @@ export default function MyStories() {
                 ) : stories.length > 0 ? (
                     stories.map(story => {
                         const category = CATEGORIES.find(c => c.value === story.category);
+                        const countryName = Object.values(countries).find(c => c.name === story.country)?.name || story.country;
                         const netVotes = story.upvotes - story.downvotes;
 
                         return (
                             <Card key={story._id} className="group overflow-hidden border-border/40 bg-card/60 backdrop-blur-md hover:bg-card hover:border-primary/20 shadow-sm transition-all duration-500 rounded-3xl p-6">
-                                {/* Action Buttons - Top Right */}
-                                <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button
-                                        variant="secondary"
-                                        size="icon"
-                                        onClick={() => handleEdit(story)}
-                                        className="h-9 w-9 rounded-full bg-background/80 hover:bg-background shadow-sm border border-border/40"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        size="icon"
-                                        onClick={() => handleDeleteClick(story._id)}
-                                        className="h-9 w-9 rounded-full bg-background/80 hover:bg-red-500 hover:text-white shadow-sm border border-border/40"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-
                                 <div className="flex items-start gap-4 mb-4">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center border border-primary/20">
                                         <ShieldCheck className="w-5 h-5 text-primary" />
@@ -124,6 +106,8 @@ export default function MyStories() {
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                             <span>{story.profession}</span>
+                                            <span>•</span>
+                                            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {countryName}</span>
                                             <span>•</span>
                                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDate(story.createdAt)}</span>
                                         </div>
@@ -148,15 +132,37 @@ export default function MyStories() {
                                             <span>{story.commentsCount || 0}</span>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => navigate(`/post/${story._id}`)}
-                                        className="h-8 rounded-full text-xs font-bold gap-1.5 hover:bg-primary/10 hover:text-primary"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        Full Story
-                                    </Button>
+
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEdit(story)}
+                                            className="h-8 w-8 rounded-full p-0 hover:bg-primary/10 hover:text-primary transition-colors"
+                                            title="Edit Story"
+                                        >
+                                            <Edit className="w-3.5 h-3.5" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteClick(story._id)}
+                                            className="h-8 w-8 rounded-full p-0 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                                            title="Delete Story"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                        <div className="h-4 w-px bg-border/40 mx-1" />
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => navigate(`/post/${story._id}`)}
+                                            className="h-8 rounded-full text-xs font-bold gap-1.5 hover:bg-primary/10 hover:text-primary"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                            Full Story
+                                        </Button>
+                                    </div>
                                 </div>
                             </Card>
                         );

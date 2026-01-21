@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/utils/validation';
 import { SUPPORTED_LANGUAGES } from '@/utils/languages';
+import { countries } from 'countries-list';
 
 export default function PostView({
     post,
@@ -40,7 +41,9 @@ export default function PostView({
                             {post.profession}
                         </span>
                         <span className="text-xs text-gray-400 dark:text-gray-600">•</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{post.country}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {Object.values(countries).find(c => c.name === post.country)?.name || post.country}
+                        </span>
                     </div>
                     <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
                         {formatDate(post.createdAt)}

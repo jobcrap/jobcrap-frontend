@@ -6,12 +6,26 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CATEGORIES, COUNTRIES, TRIGGER_WARNINGS, POST_LIMITS } from '@/utils/constants';
+import { CATEGORIES, TRIGGER_WARNINGS, POST_LIMITS } from '@/utils/constants';
 import { validatePostContent } from '@/utils/validation';
 import { postsAPI } from '@/services/api.service';
 import toast from 'react-hot-toast';
 import { AlertCircle, ShieldCheck, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { countries } from 'countries-list';
+
+const getFlagEmoji = (countryCode) => {
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+}
+
+const COUNTRY_OPTIONS = Object.entries(countries).map(([code, data]) => ({
+    value: data.name,
+    label: `${getFlagEmoji(code)} ${data.name}`
+})).sort((a, b) => a.label.localeCompare(b.label));
 
 export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -130,8 +144,8 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
                                 <SelectTrigger className={`mt-1.5 dark:bg-gray-800 dark:border-gray-700 dark:text-white ${errors.country ? 'border-red-500' : ''}`}>
                                     <SelectValue placeholder="Select country" />
                                 </SelectTrigger>
-                                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                                    {COUNTRIES.map(country => (
+                                <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[300px]">
+                                    {COUNTRY_OPTIONS.map(country => (
                                         <SelectItem key={country.value} value={country.value} className="dark:text-white">
                                             {country.label}
                                         </SelectItem>

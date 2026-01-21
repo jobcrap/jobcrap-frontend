@@ -4,12 +4,12 @@ import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
 export const useUpdateProfile = () => {
-    const setUser = useAuthStore((state) => state.setUser);
+    const updateUser = useAuthStore((state) => state.updateUser);
     return useMutation({
         mutationFn: (userData) => authAPI.updateProfile(userData),
         onSuccess: (data) => {
             if (data.success) {
-                setUser(data.data);
+                updateUser(data.data);
                 toast.success('Profile updated successfully!');
             }
         },

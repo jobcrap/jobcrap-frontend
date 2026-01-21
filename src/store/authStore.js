@@ -139,15 +139,19 @@ export const useAuthStore = create(
                 }
             },
 
-            updateUser: async (userData) => {
+            updateUser: (userData) => {
+                set({ user: { ...get().user, ...userData } });
+            },
+
+            syncProfile: async (userData) => {
                 try {
-                    // If username or avatar changed, sync with backend
+                    set({ isLoading: true });
                     const response = await authAPI.updateProfile(userData);
-                    set({ user: response.data });
+                    set({ user: response.data, isLoading: false });
                     return true;
                 } catch (error) {
                     console.error('Update Profile Error:', error);
-                    set({ error: error.message });
+                    set({ error: error.message, isLoading: false });
                     return false;
                 }
             },

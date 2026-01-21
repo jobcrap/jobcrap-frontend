@@ -42,7 +42,11 @@ export const authAPI = {
     },
 
     deleteAccount: async () => {
-        const response = await api.delete('/gdpr/delete-account');
+        const response = await api.delete('/auth/delete-account');
+        return response.data;
+    },
+    undoDeleteAccount: async () => {
+        const response = await api.post('/auth/undo-delete');
         return response.data;
     }
 };

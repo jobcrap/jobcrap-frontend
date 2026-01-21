@@ -6,14 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { User, Mail, Shield, Camera, Loader2 } from 'lucide-react';
+import { User, Mail, Shield, Camera, Loader2, AlertTriangle, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useUpdateProfile } from '@/hooks/useAuth';
+import { authAPI } from '@/services/api.service';
 import ConfirmModal from '@/components/common/ConfirmModal';
 
 export default function Profile() {
     const navigate = useNavigate();
-    const { user, isAuthenticated, logout } = useAuthStore();
+    const { user, isAuthenticated } = useAuthStore();
     const updateProfileMutation = useUpdateProfile();
     const fileInputRef = useRef(null);
 
@@ -26,7 +27,6 @@ export default function Profile() {
     // Update formData when user data is fetched or changes
     useEffect(() => {
         if (user) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData({
                 username: user.username || '',
                 email: user.email || '',
@@ -39,6 +39,9 @@ export default function Profile() {
     const [isUploading, setIsUploading] = useState(false);
     const [isPasswordLoading, setIsPasswordLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isUndoLoading, setIsUndoLoading] = useState(false);
+    const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+    const { updateUser } = useAuthStore();
 
     // Redirect if not authenticated
     if (!isAuthenticated) {
@@ -139,10 +142,31 @@ export default function Profile() {
         });
     };
 
-    const handleDeleteAccount = () => {
-        toast.success('Account deleted successfully');
-        logout();
-        navigate('/');
+    const handleDeleteAccount = async () => {
+        setIsDeleteLoading(true);
+        try {
+            const response = await authAPI.deleteAccount();
+            updateUser(response.data);
+            toast.success('Deletion scheduled. You have 30 days to undo this.');
+            setIsDeleteModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to schedule deletion');
+        } finally {
+            setIsDeleteLoading(false);
+        }
+    };
+
+    const handleUndoDeletion = async () => {
+        setIsUndoLoading(true);
+        try {
+            const response = await authAPI.undoDeleteAccount();
+            updateUser(response.data);
+            toast.success('Account restoration successful! Your data is safe.');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to undo deletion');
+        } finally {
+            setIsUndoLoading(false);
+        }
     };
 
     return (
@@ -189,15 +213,48 @@ export default function Profile() {
                         </div>
 
                         <h2 className="mt-6 text-2xl font-black text-foreground">{user?.username}</h2>
-                        <p className="text-muted-foreground font-medium mb-6">{user?.email}</p>
+                        <p className="text-muted-foreground font-medium mb-4">{user?.email}</p>
 
-                        <div className="pt-6 border-t border-border/40 w-full grid grid-cols-2 gap-4">
-                            <div className="bg-primary/5 p-4 rounded-2xl">
-                                <div className="text-2xl font-black text-primary">{user?.storiesCount || 0}</div>
+                        {user?.isDeletionPending && (
+                            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-3xl animate-pulse">
+                                <div className="flex items-center justify-center gap-2 text-red-500 font-bold mb-3">
+                                    <AlertTriangle className="w-5 h-5" />
+                                    <span>DELETION SCHEDULED</span>
+                                </div>
+                                <p className="text-xs text-red-500/80 font-medium mb-4 leading-relaxed">
+                                    Your account is scheduled for permanent removal on
+                                    <span className="block font-black mt-1">
+                                        {new Date(user.deletionScheduledAt).toLocaleDateString(undefined, {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </span>
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleUndoDeletion}
+                                    disabled={isUndoLoading}
+                                    className="w-full rounded-2xl border-red-500/20 hover:bg-red-500/10 text-red-500 font-black h-11"
+                                >
+                                    {isUndoLoading ? (
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    ) : (
+                                        <RotateCcw className="w-4 h-4 mr-2" />
+                                    )}
+                                    UNDO DELETION
+                                </Button>
+                            </div>
+                        )}
+
+                        <div className="pt-8 border-t border-border/40 w-full flex flex-row items-center justify-center gap-6">
+                            <div className="flex-1 bg-primary/5 p-4 rounded-3xl border border-primary/10 transition-all hover:bg-primary/10 group/stat">
+                                <div className="text-3xl font-black text-primary mb-1 group-hover/stat:scale-110 transition-transform">{user?.storiesCount || 0}</div>
                                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Stories</div>
                             </div>
-                            {/* <div className="bg-secondary/5 p-4 rounded-2xl">
-                                <div className="text-2xl font-black text-secondary-foreground">{user?.totalVotes || 0}</div>
+                            {/* <div className="flex-1 bg-secondary/5 p-4 rounded-3xl border border-border/40 transition-all hover:bg-secondary/10 group/stat">
+                                <div className="text-3xl font-black text-secondary-foreground mb-1 group-hover/stat:scale-110 transition-transform">{user?.totalVotes || 0}</div>
                                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Trust Score</div>
                             </div> */}
                         </div>
@@ -210,10 +267,11 @@ export default function Profile() {
                         </h4>
                         <Button
                             variant="outline"
+                            disabled={user?.isDeletionPending}
                             onClick={() => setIsDeleteModalOpen(true)}
-                            className="w-full rounded-xl border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-bold"
+                            className="w-full rounded-xl border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Delete Account Permanently
+                            {user?.isDeletionPending ? 'Deletion Already Scheduled' : 'Delete Account Permanently'}
                         </Button>
                     </Card>
                 </div>
@@ -223,7 +281,9 @@ export default function Profile() {
                     <Tabs defaultValue="account" className="w-full">
                         <TabsList className="flex items-center gap-2 mb-8 bg-muted/20 p-1.5 rounded-2xl w-fit">
                             <TabsTrigger value="account" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">Account Settings</TabsTrigger>
-                            <TabsTrigger value="security" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">Security Hub</TabsTrigger>
+                            {user?.authProvider === 'local' && (
+                                <TabsTrigger value="security" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">Security Hub</TabsTrigger>
+                            )}
                         </TabsList>
 
                         <TabsContent value="account" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -264,94 +324,96 @@ export default function Profile() {
                             </form>
                         </TabsContent>
 
-                        <TabsContent value="security" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <form
-                                onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    const currentPwd = e.target.currentPassword.value;
-                                    const newPwd = e.target.newPassword.value;
-                                    const confirmPwd = e.target.confirmPassword.value;
+                        {user?.authProvider === 'local' && (
+                            <TabsContent value="security" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <form
+                                    onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const currentPwd = e.target.currentPassword.value;
+                                        const newPwd = e.target.newPassword.value;
+                                        const confirmPwd = e.target.confirmPassword.value;
 
-                                    if (newPwd !== confirmPwd) {
-                                        toast.error('New passwords do not match');
-                                        return;
-                                    }
+                                        if (newPwd !== confirmPwd) {
+                                            toast.error('New passwords do not match');
+                                            return;
+                                        }
 
-                                    if (newPwd.length < 6) {
-                                        toast.error('Password must be at least 6 characters');
-                                        return;
-                                    }
+                                        if (newPwd.length < 6) {
+                                            toast.error('Password must be at least 6 characters');
+                                            return;
+                                        }
 
-                                    setIsPasswordLoading(true);
-                                    const changePassword = useAuthStore.getState().changePassword;
-                                    const success = await changePassword(currentPwd, newPwd);
+                                        setIsPasswordLoading(true);
+                                        const changePassword = useAuthStore.getState().changePassword;
+                                        const success = await changePassword(currentPwd, newPwd);
 
-                                    if (success) {
-                                        toast.success('Password updated successfully!');
-                                        e.target.reset();
-                                    } else {
-                                        toast.error(useAuthStore.getState().error || 'Failed to update password');
-                                    }
-                                    setIsPasswordLoading(false);
-                                }}
-                                className="space-y-8"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <Label className="text-sm font-bold ml-1">Current Password</Label>
-                                        <div className="relative">
-                                            <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                            <Input
-                                                name="currentPassword"
-                                                type="password"
-                                                placeholder="••••••••"
-                                                required
-                                                className="pl-12 rounded-2xl border-border/40 bg-background/50 h-12 text-lg font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <Label className="text-sm font-bold ml-1">New Password</Label>
-                                        <div className="relative">
-                                            <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                            <Input
-                                                name="newPassword"
-                                                type="password"
-                                                placeholder="••••••••"
-                                                required
-                                                className="pl-12 rounded-2xl border-border/40 bg-background/50 h-12 text-lg font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <Label className="text-sm font-bold ml-1">Confirm New Password</Label>
-                                        <div className="relative">
-                                            <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                            <Input
-                                                name="confirmPassword"
-                                                type="password"
-                                                placeholder="••••••••"
-                                                required
-                                                className="pl-12 rounded-2xl border-border/40 bg-background/50 h-12 text-lg font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    disabled={isPasswordLoading}
-                                    className="rounded-full px-10 h-14 text-lg font-black shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary"
+                                        if (success) {
+                                            toast.success('Password updated successfully!');
+                                            e.target.reset();
+                                        } else {
+                                            toast.error(useAuthStore.getState().error || 'Failed to update password');
+                                        }
+                                        setIsPasswordLoading(false);
+                                    }}
+                                    className="space-y-8"
                                 >
-                                    {isPasswordLoading ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                            Recalibrating Vault...
-                                        </>
-                                    ) : 'Update Security Key'}
-                                </Button>
-                            </form>
-                        </TabsContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-bold ml-1">Current Password</Label>
+                                            <div className="relative">
+                                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                <Input
+                                                    name="currentPassword"
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    className="pl-12 rounded-2xl border-border/40 bg-background/50 h-12 text-lg font-medium"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-bold ml-1">New Password</Label>
+                                            <div className="relative">
+                                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                <Input
+                                                    name="newPassword"
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    className="pl-12 rounded-2xl border-border/40 bg-background/50 h-12 text-lg font-medium"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-bold ml-1">Confirm New Password</Label>
+                                            <div className="relative">
+                                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                <Input
+                                                    name="confirmPassword"
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    className="pl-12 rounded-2xl border-border/40 bg-background/50 h-12 text-lg font-medium"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        disabled={isPasswordLoading}
+                                        className="rounded-full px-10 h-14 text-lg font-black shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary"
+                                    >
+                                        {isPasswordLoading ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                                Recalibrating Vault...
+                                            </>
+                                        ) : 'Update Security Key'}
+                                    </Button>
+                                </form>
+                            </TabsContent>
+                        )}
                     </Tabs>
                 </Card>
             </div>
@@ -360,9 +422,9 @@ export default function Profile() {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDeleteAccount}
-                title="Permanently Delete Account?"
-                description="This will remove all your stories, comments, and profile data from our records forever. This action is irreversible."
-                confirmText="Yes, delete everything"
+                title="Schedule Account Deletion?"
+                description="Your account and all associated data will be permanently removed in 30 days. You can cancel this request at any time before then from your profile settings."
+                confirmText={isDeleteLoading ? "Scheduling..." : "Yes, schedule deletion"}
                 variant="destructive"
             />
         </div>

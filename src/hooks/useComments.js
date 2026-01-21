@@ -95,6 +95,8 @@ export const useDeleteComment = (storyId) => {
         mutationFn: (commentId) => commentsAPI.deleteComment(commentId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['comments', storyId] });
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+            queryClient.invalidateQueries({ queryKey: ['post', storyId] });
             toast.success('Comment deleted');
         },
     });

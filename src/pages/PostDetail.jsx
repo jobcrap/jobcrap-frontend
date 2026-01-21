@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, AlertTriangle, Send, Globe, Flag } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Share2, AlertTriangle, Send, Globe, Flag, Trash2 } from 'lucide-react';
 import { postsAPI } from '@/services/api.service';
 import { usePost, useVotePost } from '@/hooks/usePosts';
-import { useComments, useCreateComment, useVoteComment } from '@/hooks/useComments';
+import { useComments, useCreateComment, useVoteComment, useDeleteComment } from '@/hooks/useComments';
 import { CATEGORIES } from '@/utils/constants';
 import { formatDate } from '@/utils/validation';
 import ShareModal from '@/components/post/ShareModal';
@@ -23,13 +23,14 @@ export default function PostDetail() {
     const navigate = useNavigate();
     const location = useLocation();
     const fromAdmin = location.state?.fromAdmin;
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, user } = useAuthStore();
 
     const { data: postRes, isLoading: isPostLoading } = usePost(id);
     const { data: commentsRes } = useComments(id);
     const voteMutation = useVotePost();
     const commentMutation = useCreateComment(id);
     const commentVoteMutation = useVoteComment(id);
+    const deleteCommentMutation = useDeleteComment(id);
 
     const post = postRes?.data;
     const comments = commentsRes?.data?.comments || commentsRes?.data || [];
@@ -46,6 +47,8 @@ export default function PostDetail() {
     const langMenuRef = useRef(null);
     const buttonRef = useRef(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+    // const [commentTranslations, setCommentTranslations] = useState({});
+    // const [translatingComments, setTranslatingComments] = useState({});
 
     useEffect(() => {
         if (post?.triggerWarnings?.length > 0) {
@@ -160,6 +163,38 @@ export default function PostDetail() {
         }
         commentVoteMutation.mutate({ commentId, type: voteType });
     };
+
+    const handleDeleteComment = (commentId) => {
+        if (window.confirm('Are you sure you want to delete this comment?')) {
+            deleteCommentMutation.mutate(commentId);
+        }
+    };
+
+    /*
+    const handleTranslateComment = async (commentId, text) => {
+        if (commentTranslations[commentId]) {
+            // Toggle back to original if already translated
+            // We can just store it in state, maybe use null to signify original?
+            // Or better, let's keep the translation and just toggle display?
+            // For now, let's just re-fetch or maybe toggle a separate 'showTranslation' state?
+            // To be simple: if I click translate, I fetch. If I want original, I click "Show Original".
+            return; 
+        }
+
+        setTranslatingComments(prev => ({ ...prev, [commentId]: true }));
+        try {
+            const result = await postsAPI.translateText(text, 'en'); // Target English for now or dynamic? Assuming EN like posts
+            setCommentTranslations(prev => ({
+                ...prev,
+                [commentId]: result.data.translated
+            }));
+        } catch (error) {
+            toast.error('Translation failed');
+        } finally {
+            setTranslatingComments(prev => ({ ...prev, [commentId]: false }));
+        }
+    };
+    */
 
     if (isShareMode) {
         return (
@@ -530,46 +565,16 @@ export default function PostDetail() {
                 <div className="space-y-4">
                     {comments.length > 0 ? (
                         comments.map(comment => {
+                            // const isTranslated = !!commentTranslations[comment._id];
+                            // const displayComment = isTranslated ? commentTranslations[comment._id] : comment.text;
+                            const displayComment = comment.text;
 
                             return (
-                                <Card key={comment._id} className="p-5 shadow-sm border-border/40 bg-card/40 hover:bg-card transition-colors rounded-2xl">
-                                    <div className="flex items-start gap-4">
-                                        <div className="flex flex-col items-center gap-1 mr-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleCommentVote(comment._id, 'upvote')}
-                                                className={`h-6 w-6 p-0 hover:bg-transparent ${comment.userVote === 'upvote'
-                                                    ? 'text-orange-600 dark:text-orange-400'
-                                                    : 'text-gray-400 hover:text-orange-500'
-                                                    }`}
-                                            >
-                                                <ThumbsUp className={`w-5 h-5 ${comment.userVote === 'upvote' ? 'fill-current' : ''}`} />
-                                            </Button>
-
-                                            <span className={`text-xs font-bold ${comment.userVote === 'upvote' ? 'text-orange-500' : 'text-gray-500'}`}>
-                                                {comment.upvotes || 0}
-                                            </span>
-
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleCommentVote(comment._id, 'downvote')}
-                                                className={`h-6 w-6 p-0 hover:bg-transparent ${comment.userVote === 'downvote'
-                                                    ? 'text-blue-600 dark:text-blue-400'
-                                                    : 'text-gray-400 hover:text-blue-500'
-                                                    }`}
-                                            >
-                                                <ThumbsDown className={`w-5 h-5 ${comment.userVote === 'downvote' ? 'fill-current' : ''}`} />
-                                            </Button>
-
-                                            <span className={`text-sm font-bold ${comment.userVote === 'downvote' ? 'text-blue-500' : 'text-gray-500'}`}>
-                                                {comment.downvotes || 0}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
+                                <Card key={comment._id} className="p-4 shadow-sm border-border/40 bg-card/40 hover:bg-card transition-colors rounded-xl">
+                                    <div className="flex flex-col gap-2">
+                                        {/* Header: Author + Timestamp */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
                                                 <img
                                                     src={comment.author?.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
                                                     alt={comment.author?.username}
@@ -578,14 +583,80 @@ export default function PostDetail() {
                                                 <span className="font-semibold text-sm text-gray-900 dark:text-white">
                                                     {comment.author?.username || 'Anonymous'}
                                                 </span>
-                                                <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
+                                                <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
                                                     {formatDate(comment.createdAt)}
                                                 </span>
                                             </div>
-                                            <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">
-                                                {comment.text}
-                                            </p>
+                                        </div>
+
+                                        {/* Comment Text */}
+                                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm whitespace-pre-wrap ml-8">
+                                            {displayComment}
+                                        </p>
+
+                                        {/* Actions Footer */}
+                                        <div className="flex items-center gap-4 ml-8 mt-1">
+                                            {/* Vote Buttons */}
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleCommentVote(comment._id, 'upvote')}
+                                                    className={`h-6 px-1.5 gap-1 hover:bg-transparent ${comment.userVote === 'upvote'
+                                                        ? 'text-orange-600 dark:text-orange-400'
+                                                        : 'text-gray-400 hover:text-orange-500'
+                                                        }`}
+                                                >
+                                                    <ThumbsUp className={`w-3.5 h-3.5 ${comment.userVote === 'upvote' ? 'fill-current' : ''}`} />
+                                                    <span className={`text-xs font-bold ${comment.userVote === 'upvote' ? 'text-orange-500' : 'text-gray-500'}`}>
+                                                        {comment.upvotes || 0}
+                                                    </span>
+                                                </Button>
+
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleCommentVote(comment._id, 'downvote')}
+                                                    className={`h-6 px-1.5 gap-1 hover:bg-transparent ${comment.userVote === 'downvote'
+                                                        ? 'text-blue-600 dark:text-blue-400'
+                                                        : 'text-gray-400 hover:text-blue-500'
+                                                        }`}
+                                                >
+                                                    <ThumbsDown className={`w-3.5 h-3.5 ${comment.userVote === 'downvote' ? 'fill-current' : ''}`} />
+                                                    <span className={`text-xs font-bold ${comment.userVote === 'downvote' ? 'text-blue-500' : 'text-gray-500'}`}>
+                                                        {comment.downvotes || 0}
+                                                    </span>
+                                                </Button>
+                                            </div>
+
+                                            {/* Divide */}
+                                            <div className="w-px h-3 bg-gray-200 dark:bg-gray-700" />
+
+                                            {/* Translate Action - CURRENTLY DISABLED
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => isTranslated ? setCommentTranslations(prev => ({ ...prev, [comment._id]: null })) : handleTranslateComment(comment._id, comment.text)}
+                                                disabled={translatingComments[comment._id]}
+                                                className="h-6 px-2 text-xs text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"
+                                            >
+                                                <Globe className="w-3 h-3 mr-1" />
+                                                {translatingComments[comment._id] ? '...' : (isTranslated ? 'Original' : 'Translate')}
+                                            </Button>
+                                            */}
+
+                                            {/* Delete Action */}
+                                            {(user?.id === comment.author?._id || user?.role === 'admin') && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteComment(comment._id)}
+                                                    className="ml-auto h-6 w-6 p-0 text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>

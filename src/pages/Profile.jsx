@@ -196,10 +196,10 @@ export default function Profile() {
                                 <div className="text-2xl font-black text-primary">{user?.storiesCount || 0}</div>
                                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Stories</div>
                             </div>
-                            <div className="bg-secondary/5 p-4 rounded-2xl">
+                            {/* <div className="bg-secondary/5 p-4 rounded-2xl">
                                 <div className="text-2xl font-black text-secondary-foreground">{user?.totalVotes || 0}</div>
                                 <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Trust Score</div>
-                            </div>
+                            </div> */}
                         </div>
                     </Card>
 

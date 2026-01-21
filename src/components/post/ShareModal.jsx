@@ -3,7 +3,13 @@ import toast from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Copy, Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Check, Copy, Facebook, Linkedin, Instagram } from 'lucide-react';
+
+const XIcon = (props) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+);
 
 export default function ShareModal({ isOpen, onClose, postId, profession, country }) {
     const [copied, setCopied] = useState(false);
@@ -26,9 +32,9 @@ export default function ShareModal({ isOpen, onClose, postId, profession, countr
     const shareLinks = [
         {
             name: 'X (Twitter)',
-            icon: Twitter,
+            icon: XIcon,
             url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(attributionText)}`,
-            color: 'hover:bg-blue-50 dark:hover:bg-blue-950'
+            color: 'hover:bg-gray-100 dark:hover:bg-gray-800'
         },
         {
             name: 'Facebook',
@@ -43,10 +49,10 @@ export default function ShareModal({ isOpen, onClose, postId, profession, countr
             color: 'hover:bg-blue-50 dark:hover:bg-blue-950'
         },
         {
-            name: 'Email',
-            icon: Mail,
-            url: `mailto:?subject=${encodeURIComponent('Workplace story from JobCrap')}&body=${encodeURIComponent(attributionText + '\n\n' + url)}`,
-            color: 'hover:bg-gray-100 dark:hover:bg-gray-800'
+            name: 'Instagram',
+            icon: Instagram,
+            url: `https://www.instagram.com/`,
+            color: 'hover:bg-pink-50 dark:hover:bg-pink-950'
         }
     ];
 

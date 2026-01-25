@@ -34,8 +34,10 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
         category: '',
         text: '',
         triggerWarnings: [],
+        tags: [],
         isAnonymous: false
     });
+    const [tagInput, setTagInput] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +50,7 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
                 category: story.category || '',
                 text: story.text || '',
                 triggerWarnings: story.triggerWarnings || [],
+                tags: story.tags || [],
                 isAnonymous: story.isAnonymous || false
             });
         }
@@ -67,6 +70,24 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
             triggerWarnings: prev.triggerWarnings.includes(warning)
                 ? prev.triggerWarnings.filter(w => w !== warning)
                 : [...prev.triggerWarnings, warning]
+        }));
+    };
+
+    const handleAddTag = (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const tag = tagInput.trim().toLowerCase();
+            if (tag && !formData.tags.includes(tag)) {
+                setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
+                setTagInput('');
+            }
+        }
+    };
+
+    const handleRemoveTag = (tagToRemove) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(t => t !== tagToRemove)
         }));
     };
 
@@ -97,8 +118,17 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
 
         setIsSubmitting(true);
 
+        // Add any pending tag input
+        const finalFormData = { ...formData };
+        if (tagInput.trim()) {
+            const lastTag = tagInput.trim().toLowerCase();
+            if (!finalFormData.tags.includes(lastTag)) {
+                finalFormData.tags = [...finalFormData.tags, lastTag];
+            }
+        }
+
         try {
-            await postsAPI.updateStory(story._id, formData);
+            await postsAPI.updateStory(story._id, finalFormData);
             onSuccess?.();
             onClose();
         } catch (error) {
@@ -221,6 +251,42 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
                                 Note: Stories with trigger warnings will be flagged for admin review
                             </p>
                         )}
+                    </div>
+
+                    {/* Tags Section */}
+                    <div>
+                        <Label className="dark:text-gray-300 mb-2 block">
+                            Topic Tags
+                        </Label>
+                        <div className="space-y-3">
+                            <Input
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={handleAddTag}
+                                placeholder="Add tags and press Enter"
+                                className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            />
+                            <div className="flex flex-wrap gap-2">
+                                {formData.tags.map((tag) => (
+                                    <Badge
+                                        key={tag}
+                                        variant="secondary"
+                                        className="pl-3 pr-2 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border-0 hover:bg-blue-500/20 transition-all font-bold gap-2"
+                                    >
+                                        #{tag}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveTag(tag)}
+                                            className="p-0.5 hover:bg-red-500 hover:text-white rounded-full transition-colors"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Anonymity Toggle */}

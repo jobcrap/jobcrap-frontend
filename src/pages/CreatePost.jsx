@@ -130,7 +130,16 @@ export default function CreatePost() {
             return;
         }
 
-        createPostMutation.mutate(formData, {
+        // Add any pending tag input
+        const finalFormData = { ...formData };
+        if (tagInput.trim()) {
+            const lastTag = tagInput.trim().toLowerCase();
+            if (!finalFormData.tags.includes(lastTag)) {
+                finalFormData.tags = [...finalFormData.tags, lastTag];
+            }
+        }
+
+        createPostMutation.mutate(finalFormData, {
             onSuccess: () => navigate('/feed')
         });
     };

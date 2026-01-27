@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { CATEGORIES, TRIGGER_WARNINGS, POST_LIMITS } from '@/utils/constants';
-import { validatePostContent } from '@/utils/validation';
+import { validatePostContent, countWords } from '@/utils/validation';
 import { postsAPI } from '@/services/api.service';
 import toast from 'react-hot-toast';
 import { AlertCircle, ShieldCheck, Check } from 'lucide-react';
@@ -132,13 +132,20 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
             onSuccess?.();
             onClose();
         } catch (error) {
-            toast.error('Failed to update story');
+            const data = error.response?.data;
+            let message = 'Failed to update story';
+
+            if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                message = data.errors[0].msg || data.message || message;
+            } else if (data?.message) {
+                message = data.message;
+            }
+
+            toast.error(message);
             console.error(error);
             setIsSubmitting(false);
         }
     };
-
-    const charCount = formData.text.length;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -216,12 +223,17 @@ export default function EditStoryModal({ isOpen, onClose, story, onSuccess }) {
                             className={`mt-1.5 resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white ${errors.text ? 'border-red-500' : ''}`}
                         />
                         <div className="flex items-center justify-between mt-1">
-                            <span className={`text-xs ${charCount > POST_LIMITS.MAX_CHARACTERS * 0.8 ? 'text-orange-600 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
-                                {charCount}/{POST_LIMITS.MAX_CHARACTERS} characters
+                            <span className={cn(
+                                "text-xs font-bold",
+                                countWords(formData.text) > POST_LIMITS.MAX_WORDS ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
+                            )}>
+                                {countWords(formData.text)}/{POST_LIMITS.MAX_WORDS} words
                             </span>
                         </div>
-                        {(errors.text || errors.sentences) && (
-                            <p className="text-sm text-red-600 mt-1">{errors.text || errors.sentences}</p>
+                        {errors.text && (
+                            <p className="text-sm text-red-500 font-bold mt-1 animate-pulse">
+                                <AlertCircle className="inline-block w-4 h-4 mr-1" /> {errors.text}
+                            </p>
                         )}
                     </div>
 

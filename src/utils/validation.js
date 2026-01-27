@@ -16,12 +16,11 @@ export const validatePassword = (password) => {
 };
 
 /**
- * Count sentences in text
+ * Count words in text
  */
-export const countSentences = (text) => {
+export const countWords = (text) => {
     if (!text) return 0;
-    const sentences = text.match(/[^.!?]+[.!?]+/g);
-    return sentences ? sentences.length : 0;
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
 };
 
 /**
@@ -32,15 +31,16 @@ export const validatePostContent = (text) => {
 
     if (!text || text.trim().length === 0) {
         errors.text = `Post content cannot be empty`;
+        return errors;
     }
 
-    if (text && text.length > POST_LIMITS.MAX_CHARACTERS) {
-        errors.text = `Post cannot exceed ${POST_LIMITS.MAX_CHARACTERS} characters`;
+    const wordCount = countWords(text);
+    if (wordCount > POST_LIMITS.MAX_WORDS) {
+        errors.text = `Your story is too long. Please keep it under ${POST_LIMITS.MAX_WORDS} words.`;
     }
 
-    const sentenceCount = countSentences(text);
-    if (sentenceCount > POST_LIMITS.MAX_SENTENCES) {
-        errors.sentences = `Post cannot exceed ${POST_LIMITS.MAX_SENTENCES} sentences`;
+    if (text.length > POST_LIMITS.MAX_CHARACTERS) {
+        errors.text = `Your story is too long for our technical systems. Please shorten it.`;
     }
 
     return errors;

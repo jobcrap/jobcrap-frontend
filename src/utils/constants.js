@@ -63,8 +63,8 @@ export const LANGUAGES = [
 
 // Post limits
 export const POST_LIMITS = {
-    MAX_CHARACTERS: 700,
-    MAX_SENTENCES: 7,
+    MAX_WORDS: 700,
+    MAX_CHARACTERS: 10000,
     MIN_CHARACTERS: 1
 };
 

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CATEGORIES, TRIGGER_WARNINGS, POST_LIMITS, COUNTRIES } from '@/utils/constants';
-import { validatePostContent, countSentences } from '@/utils/validation';
+import { validatePostContent, countWords } from '@/utils/validation';
 import { PenSquare, AlertCircle, Check, ChevronsUpDown, Eye, ShieldCheck, Clock, Globe, ThumbsUp, MessageCircle, Share2, ShieldQuestion, Tag, X } from 'lucide-react';
 import { PostSkeleton } from '@/components/ui/skeleton';
 import { countries } from 'countries-list';
@@ -145,7 +145,7 @@ export default function CreatePost() {
     };
 
 
-    const sentenceCount = countSentences(formData.text);
+    const wordCount = countWords(formData.text);
 
 
     return (
@@ -177,12 +177,18 @@ export default function CreatePost() {
                                     className="min-h-[250px] rounded-3xl border-border/40 bg-background/50 focus:border-primary/50 focus:ring-primary/20 transition-all text-lg p-6"
                                     required
                                 />
-                                <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest px-2 text-muted-foreground">
-                                    <span className={formData.text.length > POST_LIMITS.MAX_CHARACTERS ? 'text-red-500' : ''}>
-                                        {formData.text.length} / {POST_LIMITS.MAX_CHARACTERS} Characters
+                                <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest px-2">
+                                    <span className={cn(
+                                        wordCount > POST_LIMITS.MAX_WORDS ? 'text-red-500' : 'text-muted-foreground'
+                                    )}>
+                                        {wordCount} / {POST_LIMITS.MAX_WORDS} Words
                                     </span>
-                                    <span>{sentenceCount} / {POST_LIMITS.MAX_SENTENCES} Sentences</span>
                                 </div>
+                                {errors.text && (
+                                    <p className="text-sm text-red-500 font-bold ml-1 animate-pulse">
+                                        <AlertCircle className="inline-block w-4 h-4 mr-1" /> {errors.text}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Options Grid */}

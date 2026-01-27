@@ -45,7 +45,15 @@ export const useCreatePost = () => {
             toast.success('Story posted successfully!');
         },
         onError: (error) => {
-            toast.error(error.response?.data?.message || 'Failed to post story');
+            const data = error.response?.data;
+            let message = data?.message || 'Failed to post story';
+
+            // If there are validation errors, show the first one
+            if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                message = data.errors[0].msg || message;
+            }
+
+            toast.error(message);
         },
     });
 };

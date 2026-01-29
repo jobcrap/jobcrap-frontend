@@ -51,6 +51,11 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
+                                <Link to="/csae-policy" className="text-muted-foreground hover:text-primary transition-colors">
+                                    CSAE Policy
+                                </Link>
+                            </li>
+                            <li>
                                 <Link to="/impressum" className="text-muted-foreground hover:text-primary transition-colors">
                                     Impressum
                                 </Link>

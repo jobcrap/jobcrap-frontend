@@ -14,6 +14,7 @@ export default function SettingsTab() {
         terms_of_service: '',
         support_email: '',
         impressum: '',
+        csae_policy: `Zero Tolerance Policy\nJobCrap maintains a zero-tolerance policy for Child Sexual Abuse and Exploitation (CSAE). We prohibit any content or behavior that sexually exploits, abuses, or endangers children.\n\nWhat is CSAE?\nCSAE refers to child sexual abuse and exploitation, including content or behavior that sexually exploits, abuses, or endangers children. This includes, for example:\nGrooming a child for sexual exploitation\nSextorting a child\nTrafficking of a child for sex\nOtherwise sexually exploiting a child\nCreating, sharing, or distributing child sexual abuse material (CSAM)\nSoliciting sexual content from minors\nEngaging in sexual conversations with minors\nAny attempt to contact minors for sexual purposes\n\nProhibited Content and Behavior\nThe following are strictly prohibited on our platform and will result in immediate account termination and reporting to law enforcement:\nAny form of child sexual abuse or exploitation\nContent that depicts, describes, or promotes sexual abuse of minors\nAttempts to groom, solicit, or exploit minors\nSharing or distributing child sexual abuse material\nAny communication with minors for sexual purposes\nContent that normalizes or encourages child sexual abuse\n\nReporting CSAE Content\nIf you encounter content or behavior that violates this policy:\nReport immediately using our in-app reporting feature\nContact our safety team directly at [your-safety-email@jobcrap.com]\nReport to appropriate authorities:\nNational Center for Missing & Exploited Children (NCMEC): report.cybertip.org\nYour local law enforcement agency\n\nOur Response to Violations\nWhen we become aware of CSAE content or behavior:\nWe immediately remove the reported content\nWe permanently terminate the accounts of violators\nWe cooperate fully with law enforcement investigations\nWe report violations to NCMEC and relevant authorities\nWe preserve evidence for legal proceedings\n\nAge Verification\nJobCrap is intended for users 18 years and older. By using this platform, you confirm that:\nYou are at least 18 years of age\nYou will not engage in any activity that endangers children\nYou understand that violations of this policy may result in criminal prosecution\n\nYour Responsibility\nAll users are responsible for:\nReporting suspected CSAE content immediately upon discovery\nNot sharing, saving, or engaging with such content in any way\nUnderstanding that violations may result in both account termination and legal action\nComplying with all applicable laws regarding child protection\n\nSupport Resources\nIf you or someone you know has been affected by child sexual abuse or exploitation, please seek help:\nNational Sexual Assault Hotline: 1-800-656-4673\nChildhelp National Child Abuse Hotline: 1-800-4-A-CHILD (1-800-422-4453)\nCrisis Text Line: Text HOME to 741741\nNational Center for Missing & Exploited Children: www.missingkids.org\n\nLegal Consequences\nViolations of this policy are serious crimes. We will:\nReport all violations to law enforcement\nCooperate fully with criminal investigations\nProvide evidence to support prosecution\nSupport victims in seeking justice\n\nContact Us\nIf you have questions about this policy or need to report a violation, please contact our safety team at [your-safety-email@jobcrap.com].\n\nLast Updated: January 29, 2026\nEffective Date: January 29, 2026`,
         landing_sample_story: {
             text: '',
             profession: '',
@@ -23,8 +24,9 @@ export default function SettingsTab() {
             comments: '42'
         }
     });
+    const [originalSettings, setOriginalSettings] = useState({}); // To track changes
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [isSaving, setIsSaving] = useState(null); // Changed from boolean to null/key string
 
     useEffect(() => {
         fetchSettings();
@@ -43,9 +45,11 @@ export default function SettingsTab() {
                 if (s.key === 'terms_of_service') newSettings.terms_of_service = s.value;
                 if (s.key === 'support_email') newSettings.support_email = s.value;
                 if (s.key === 'impressum') newSettings.impressum = s.value;
+                if (s.key === 'csae_policy') newSettings.csae_policy = s.value;
                 if (s.key === 'landing_sample_story') newSettings.landing_sample_story = s.value;
             });
             setSettings(newSettings);
+            setOriginalSettings(JSON.parse(JSON.stringify(newSettings))); // Deep copy for comparison
         } catch (error) {
             console.error('Failed to load settings', error);
             toast.error('Failed to load site settings');
@@ -55,14 +59,18 @@ export default function SettingsTab() {
     };
 
     const handleSave = async (key) => {
-        setIsSaving(true);
+        setIsSaving(key);
         try {
             await settingsAPI.updateSetting(key, settings[key]);
+            setOriginalSettings(prev => ({
+                ...prev,
+                [key]: JSON.parse(JSON.stringify(settings[key]))
+            })); // Update original to hide button
             toast.success('Setting updated successfully');
         } catch {
             toast.error('Failed to update setting');
         } finally {
-            setIsSaving(false);
+            setIsSaving(null);
         }
     };
 
@@ -74,6 +82,13 @@ export default function SettingsTab() {
                 [field]: value
             }
         }));
+    };
+
+    const isDirty = (key) => {
+        if (key === 'landing_sample_story') {
+            return JSON.stringify(settings[key]) !== JSON.stringify(originalSettings[key]);
+        }
+        return settings[key] !== originalSettings[key];
     };
 
     if (isLoading) {
@@ -93,14 +108,16 @@ export default function SettingsTab() {
                         <h2 className="text-2xl font-black text-foreground">General Settings</h2>
                         <p className="text-muted-foreground font-medium">Core platform identification and contact points.</p>
                     </div>
-                    <Button
-                        onClick={() => handleSave('support_email')}
-                        disabled={isSaving}
-                        className="rounded-full px-6"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Save Settings
-                    </Button>
+                    {isDirty('support_email') && (
+                        <Button
+                            onClick={() => handleSave('support_email')}
+                            disabled={isSaving !== null}
+                            className="rounded-full px-6 animate-in fade-in zoom-in duration-300"
+                        >
+                            {isSaving === 'support_email' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save Settings
+                        </Button>
+                    )}
                 </div>
                 <div className="space-y-4">
                     <div className="space-y-2">
@@ -126,14 +143,16 @@ export default function SettingsTab() {
                         <h2 className="text-2xl font-black text-foreground">Terms of Service</h2>
                         <p className="text-muted-foreground font-medium">Manage the legal agreement between you and your users.</p>
                     </div>
-                    <Button
-                        onClick={() => handleSave('terms_of_service')}
-                        disabled={isSaving}
-                        className="rounded-full px-6"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Save Terms
-                    </Button>
+                    {isDirty('terms_of_service') && (
+                        <Button
+                            onClick={() => handleSave('terms_of_service')}
+                            disabled={isSaving !== null}
+                            className="rounded-full px-6 animate-in fade-in zoom-in duration-300"
+                        >
+                            {isSaving === 'terms_of_service' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save Terms
+                        </Button>
+                    )}
                 </div>
                 <div className="space-y-4">
                     <Textarea
@@ -151,14 +170,16 @@ export default function SettingsTab() {
                         <h2 className="text-2xl font-black text-foreground">Privacy Policy</h2>
                         <p className="text-muted-foreground font-medium">Manage the text displayed on the Privacy Policy page.</p>
                     </div>
-                    <Button
-                        onClick={() => handleSave('privacy_policy')}
-                        disabled={isSaving}
-                        className="rounded-full px-6"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Save Policy
-                    </Button>
+                    {isDirty('privacy_policy') && (
+                        <Button
+                            onClick={() => handleSave('privacy_policy')}
+                            disabled={isSaving !== null}
+                            className="rounded-full px-6 animate-in fade-in zoom-in duration-300"
+                        >
+                            {isSaving === 'privacy_policy' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save Policy
+                        </Button>
+                    )}
                 </div>
                 <Textarea
                     value={settings.privacy_policy}
@@ -172,6 +193,36 @@ export default function SettingsTab() {
                 </p>
             </Card>
 
+            {/* CSAE Policy Section */}
+            <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-3xl shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-foreground">CSAE Policy</h2>
+                        <p className="text-muted-foreground font-medium">Manage the Child Sexual Abuse and Exploitation Zero Tolerance Policy.</p>
+                    </div>
+                    {isDirty('csae_policy') && (
+                        <Button
+                            onClick={() => handleSave('csae_policy')}
+                            disabled={isSaving !== null}
+                            className="rounded-full px-6 animate-in fade-in zoom-in duration-300"
+                        >
+                            {isSaving === 'csae_policy' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save Policy
+                        </Button>
+                    )}
+                </div>
+                <Textarea
+                    value={settings.csae_policy}
+                    onChange={(e) => setSettings(prev => ({ ...prev, csae_policy: e.target.value }))}
+                    placeholder="Enter CSAE Policy content here..."
+                    className="min-h-[300px] rounded-2xl border-border/40 bg-background/50 font-medium leading-relaxed"
+                />
+                <p className="mt-4 text-xs text-muted-foreground flex items-center gap-2">
+                    <Info className="w-3 h-3" />
+                    This policy is critical for legal compliance and user safety.
+                </p>
+            </Card>
+
             {/* Impressum Section */}
             <Card className="p-8 border-border/40 bg-card/60 backdrop-blur-md rounded-3xl shadow-xl">
                 <div className="flex items-center justify-between mb-6">
@@ -179,14 +230,16 @@ export default function SettingsTab() {
                         <h2 className="text-2xl font-black text-foreground">Impressum (Legal Notice)</h2>
                         <p className="text-muted-foreground font-medium">Manage the legal information required by German Law.</p>
                     </div>
-                    <Button
-                        onClick={() => handleSave('impressum')}
-                        disabled={isSaving}
-                        className="rounded-full px-6"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Save Impressum
-                    </Button>
+                    {isDirty('impressum') && (
+                        <Button
+                            onClick={() => handleSave('impressum')}
+                            disabled={isSaving !== null}
+                            className="rounded-full px-6 animate-in fade-in zoom-in duration-300"
+                        >
+                            {isSaving === 'impressum' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save Impressum
+                        </Button>
+                    )}
                 </div>
                 <Textarea
                     value={settings.impressum}
@@ -207,14 +260,16 @@ export default function SettingsTab() {
                         <h2 className="text-2xl font-black text-foreground">Landing Sample Story</h2>
                         <p className="text-muted-foreground font-medium">The dummy story shown on the landing page for new visitors.</p>
                     </div>
-                    <Button
-                        onClick={() => handleSave('landing_sample_story')}
-                        disabled={isSaving}
-                        className="rounded-full px-6"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Save Story
-                    </Button>
+                    {isDirty('landing_sample_story') && (
+                        <Button
+                            onClick={() => handleSave('landing_sample_story')}
+                            disabled={isSaving !== null}
+                            className="rounded-full px-6 animate-in fade-in zoom-in duration-300"
+                        >
+                            {isSaving === 'landing_sample_story' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save Story
+                        </Button>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">

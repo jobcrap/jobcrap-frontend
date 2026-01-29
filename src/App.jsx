@@ -14,6 +14,7 @@ import MyStories from '@/pages/MyStories';
 import AdminPanel from '@/pages/AdminPanel';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
+import CSAE from '@/pages/CSAE';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuthStore } from '@/store/authStore';
@@ -98,6 +99,7 @@ function App() {
               <Route path="post/:id" element={<PostDetail />} />
               <Route path="privacy" element={<Privacy />} />
               <Route path="terms" element={<Terms />} />
+              <Route path="csae-policy" element={<CSAE />} />
               <Route path="impressum" element={<Impressum />} />
 
               {/* 404 Route */}

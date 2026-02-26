@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
-import { reportsAPI } from '@/services/api.service';
+import { reportsAPI, blockAPI } from '@/services/api.service';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Ban } from 'lucide-react';
 
 const REPORT_REASONS = [
     'Spam or misleading',
@@ -18,14 +19,19 @@ const REPORT_REASONS = [
     'Other'
 ];
 
-export default function ReportModal({ isOpen, onClose, postId }) {
-    const { isAuthenticated } = useAuthStore();
+export default function ReportModal({ isOpen, onClose, postId, authorId, authorName, isAnonymous, isAuthenticated: isAuthProp, currentUserId }) {
+    const { isAuthenticated: isAuthStore } = useAuthStore();
+    const isAuth = isAuthProp !== undefined ? isAuthProp : isAuthStore;
+    const queryClient = useQueryClient();
     const [selectedReason, setSelectedReason] = useState('');
     const [additionalInfo, setAdditionalInfo] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [alsoBlock, setAlsoBlock] = useState(false);
+
+    const canBlock = isAuth && !isAnonymous && authorId && currentUserId !== authorId;
 
     const handleSubmit = async () => {
-        if (!isAuthenticated) {
+        if (!isAuth) {
             toast.error('Please login to report');
             onClose();
             return;
@@ -45,9 +51,22 @@ export default function ReportModal({ isOpen, onClose, postId }) {
 
             await reportsAPI.createReport(postId, fullReason);
 
-            toast.success('Report submitted successfully. Our team will review it shortly.');
+            // Also block user if selected
+            if (alsoBlock && canBlock) {
+                try {
+                    await blockAPI.blockUser(authorId);
+                    toast.success(`Report submitted & ${authorName || 'user'} blocked.`);
+                    queryClient.invalidateQueries({ queryKey: ['posts'] });
+                } catch (blockError) {
+                    toast.success('Report submitted. But failed to block user.');
+                }
+            } else {
+                toast.success('Report submitted successfully. Our team will review it shortly.');
+            }
+
             setSelectedReason('');
             setAdditionalInfo('');
+            setAlsoBlock(false);
             onClose();
         } catch (error) {
             console.error('Failed to submit report:', error);
@@ -114,6 +133,23 @@ export default function ReportModal({ isOpen, onClose, postId }) {
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t dark:border-gray-800">
+                    {canBlock && (
+                        <label className="flex items-center gap-2 cursor-pointer w-full pb-3">
+                            <input
+                                type="checkbox"
+                                checked={alsoBlock}
+                                onChange={(e) => setAlsoBlock(e.target.checked)}
+                                className="rounded border-gray-300 dark:border-gray-600 text-red-600 focus:ring-red-500"
+                            />
+                            <span className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1.5">
+                                <Ban className="w-3.5 h-3.5" />
+                                Also block {authorName || 'this user'}
+                            </span>
+                        </label>
+                    )}
+                </div>
+
+                <div className="flex gap-3">
                     <Button
                         variant="outline"
                         onClick={onClose}

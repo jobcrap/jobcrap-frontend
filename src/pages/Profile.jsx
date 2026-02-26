@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { User, Mail, Shield, Camera, Loader2, AlertTriangle, RotateCcw } from 'lucide-react';
+import { User, Mail, Shield, Camera, Loader2, AlertTriangle, RotateCcw, Ban } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useUpdateProfile } from '@/hooks/useAuth';
-import { authAPI } from '@/services/api.service';
+import { authAPI, blockAPI } from '@/services/api.service';
 import ConfirmModal from '@/components/common/ConfirmModal';
 
 export default function Profile() {
@@ -41,6 +41,9 @@ export default function Profile() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isUndoLoading, setIsUndoLoading] = useState(false);
     const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+    const [blockedUsers, setBlockedUsers] = useState([]);
+    const [isBlockedLoading, setIsBlockedLoading] = useState(false);
+    const [unblockingId, setUnblockingId] = useState(null);
     const { updateUser } = useAuthStore();
 
     // Redirect if not authenticated
@@ -284,6 +287,23 @@ export default function Profile() {
                             {user?.authProvider === 'local' && (
                                 <TabsTrigger value="security" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold">Security Hub</TabsTrigger>
                             )}
+                            <TabsTrigger
+                                value="blocked"
+                                className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm font-bold"
+                                onClick={async () => {
+                                    if (blockedUsers.length === 0 && !isBlockedLoading) {
+                                        setIsBlockedLoading(true);
+                                        try {
+                                            const response = await blockAPI.getBlockedUsers();
+                                            setBlockedUsers(response.data?.blockedUsers || []);
+                                        } catch (error) {
+                                            toast.error('Failed to load blocked users');
+                                        } finally {
+                                            setIsBlockedLoading(false);
+                                        }
+                                    }
+                                }}
+                            >Blocked Users</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="account" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -414,6 +434,76 @@ export default function Profile() {
                                 </form>
                             </TabsContent>
                         )}
+
+                        <TabsContent value="blocked" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Ban className="w-5 h-5 text-red-500" />
+                                    Blocked Users
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Blocked users can't see your content, and you won&apos;t see theirs.
+                                </p>
+
+                                {isBlockedLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                    </div>
+                                ) : blockedUsers.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <Ban className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                                        <p className="text-muted-foreground font-medium">No blocked users</p>
+                                        <p className="text-xs text-muted-foreground/60 mt-1">
+                                            When you block someone, they&apos;ll appear here.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {blockedUsers.map((blockedUser) => (
+                                            <div
+                                                key={blockedUser._id}
+                                                className="flex items-center justify-between p-4 bg-background/50 border border-border/40 rounded-2xl hover:bg-background/80 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={blockedUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                                                        alt={blockedUser.username}
+                                                        className="w-10 h-10 rounded-full object-cover border-2 border-border/40"
+                                                    />
+                                                    <div>
+                                                        <p className="font-bold text-sm">{blockedUser.username}</p>
+                                                        <p className="text-xs text-muted-foreground">{blockedUser.email}</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={unblockingId === blockedUser._id}
+                                                    onClick={async () => {
+                                                        setUnblockingId(blockedUser._id);
+                                                        try {
+                                                            await blockAPI.unblockUser(blockedUser._id);
+                                                            setBlockedUsers(prev => prev.filter(u => u._id !== blockedUser._id));
+                                                            toast.success(`${blockedUser.username} has been unblocked`);
+                                                        } catch (error) {
+                                                            toast.error(error.response?.data?.message || 'Failed to unblock user');
+                                                        } finally {
+                                                            setUnblockingId(null);
+                                                        }
+                                                    }}
+                                                    className="rounded-full text-xs font-bold border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                >
+                                                    {unblockingId === blockedUser._id ? (
+                                                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                                    ) : null}
+                                                    Unblock
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </TabsContent>
                     </Tabs>
                 </Card>
             </div>

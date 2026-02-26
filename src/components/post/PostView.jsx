@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
-import { ThumbsUp, ThumbsDown, MessageCircle, Share2, Flag, AlertTriangle, Globe } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ThumbsUp, ThumbsDown, MessageCircle, Share2, Flag, AlertTriangle, Globe, Ban, MoreVertical } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +23,10 @@ export default function PostView({
     langMenuRef,
     buttonRef,
     dropdownPosition,
-    commentsCount
+    commentsCount,
+    onBlock,
+    isAuthenticated,
+    currentUserId
 }) {
     return (
         <Card className="overflow-visible border-border/40 bg-card/60 backdrop-blur-md shadow-2xl rounded-3xl">
@@ -45,9 +49,19 @@ export default function PostView({
                             {Object.values(countries).find(c => c.name === post.country)?.name || post.country}
                         </span>
                     </div>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                        {formatDate(post.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                            {formatDate(post.createdAt)}
+                        </span>
+                        {/* 3-Dot Menu - Top Right */}
+                        <PostViewMoreMenu
+                            onReport={onReport}
+                            onBlock={onBlock}
+                            isAuthenticated={isAuthenticated}
+                            currentUserId={currentUserId}
+                            post={post}
+                        />
+                    </div>
                 </div>
 
                 {/* Trigger Warning */}
@@ -200,17 +214,58 @@ export default function PostView({
                         <Share2 className="w-4 h-4" />
                         <span className="text-sm font-medium hidden sm:inline">Share</span>
                     </Button>
-
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onReport}
-                        className="flex items-center gap-1.5 h-9 px-3 text-gray-600 dark:text-gray-400 hover:text-red-600"
-                    >
-                        <Flag className="w-4 h-4" />
-                    </Button>
                 </div>
             </div>
         </Card>
+    );
+}
+
+// Internal 3-dot menu component for PostView
+function PostViewMoreMenu({ onReport, onBlock, isAuthenticated, currentUserId, post }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        if (open) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [open]);
+
+    return (
+        <div className="relative" ref={ref}>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setOpen(!open)}
+                className="flex items-center h-8 w-8 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+            >
+                <MoreVertical className="w-5 h-5" />
+            </Button>
+
+            {open && (
+                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-900 border border-border/60 rounded-xl shadow-xl z-50 min-w-[200px] overflow-hidden">
+                    <button
+                        onClick={() => { setOpen(false); onReport(); }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 text-gray-700 dark:text-gray-300"
+                    >
+                        <Flag className="w-4 h-4 text-orange-500" />
+                        Report Post
+                    </button>
+                    {isAuthenticated && !post.isAnonymous && currentUserId !== post.author?._id && (
+                        <button
+                            onClick={() => { setOpen(false); onBlock(); }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-2.5 text-red-600 dark:text-red-400"
+                        >
+                            <Ban className="w-4 h-4" />
+                            Block {post.author?.username}
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }

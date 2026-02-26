@@ -4,14 +4,16 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Share2 } from 'lucide-react';
-import { postsAPI } from '@/services/api.service';
+import { postsAPI, blockAPI } from '@/services/api.service';
 import { usePost, useVotePost } from '@/hooks/usePosts';
 import { useComments, useCreateComment, useVoteComment, useDeleteComment } from '@/hooks/useComments';
+import { useQueryClient } from '@tanstack/react-query';
 import { CATEGORIES } from '@/utils/constants';
 import PostView from '@/components/post/PostView';
 import CommentSection from '@/components/post/CommentSection';
 import PostScreenshotView from '@/components/post/PostScreenshotView';
 import { PostSkeleton, CommentSkeleton } from '@/components/ui/skeleton';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 export default function PostDetail() {
     const { id } = useParams();
@@ -26,6 +28,7 @@ export default function PostDetail() {
     const commentMutation = useCreateComment(id);
     const commentVoteMutation = useVoteComment(id);
     const deleteCommentMutation = useDeleteComment(id);
+    const queryClient = useQueryClient();
 
     const post = postRes?.data;
     const comments = commentsRes?.data?.comments || commentsRes?.data || [];
@@ -39,6 +42,7 @@ export default function PostDetail() {
     const [isTranslating, setIsTranslating] = useState(false);
     const [showLangMenu, setShowLangMenu] = useState(false);
     const [isShareMode, setIsShareMode] = useState(false);
+    const [showBlockModal, setShowBlockModal] = useState(false);
     const langMenuRef = useRef(null);
     const buttonRef = useRef(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
@@ -217,6 +221,9 @@ export default function PostDetail() {
                 buttonRef={buttonRef}
                 dropdownPosition={dropdownPosition}
                 commentsCount={post.commentsCount || comments.length}
+                onBlock={() => setShowBlockModal(true)}
+                isAuthenticated={isAuthenticated}
+                currentUserId={user?._id}
             />
 
             <CommentSection
@@ -246,6 +253,30 @@ export default function PostDetail() {
                 isOpen={showReportModal}
                 onClose={() => setShowReportModal(false)}
                 postId={post._id}
+                authorId={post.author?._id}
+                authorName={post.author?.username}
+                isAnonymous={post.isAnonymous}
+                isAuthenticated={isAuthenticated}
+                currentUserId={user?._id}
+            />
+
+            <ConfirmModal
+                isOpen={showBlockModal}
+                onClose={() => setShowBlockModal(false)}
+                onConfirm={async () => {
+                    try {
+                        await blockAPI.blockUser(post.author?._id);
+                        toast.success(`${post.author?.username || 'User'} has been blocked`);
+                        queryClient.invalidateQueries({ queryKey: ['posts'] });
+                        navigate('/feed');
+                    } catch (error) {
+                        toast.error(error.response?.data?.message || 'Failed to block user');
+                    }
+                }}
+                title={`Block ${post.author?.username || 'this user'}?`}
+                description="You will no longer see their posts or comments. You can unblock them anytime from your profile settings."
+                confirmText="Block User"
+                variant="destructive"
             />
         </div>
     );

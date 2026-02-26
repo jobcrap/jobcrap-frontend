@@ -2,17 +2,20 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ThumbsUp, ThumbsDown, MessageCircle, Share2, AlertTriangle, Globe, Flag } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, MessageCircle, Share2, AlertTriangle, Globe, Flag, Ban, MoreVertical } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CATEGORIES } from '@/utils/constants';
 import { formatDate } from '@/utils/validation';
-import { postsAPI } from '@/services/api.service';
+import { postsAPI, blockAPI } from '@/services/api.service';
 import { usePostsStore } from '@/store/postsStore';
+import { useAuthStore } from '@/store/authStore';
+import { useQueryClient } from '@tanstack/react-query';
 import ReportModal from './ReportModal';
 import ShareModal from './ShareModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import { SUPPORTED_LANGUAGES } from '@/utils/languages';
 
 export default function PostCard({ post, onVote, showFullText = false }) {
@@ -25,9 +28,14 @@ export default function PostCard({ post, onVote, showFullText = false }) {
     const [showShareModal, setShowShareModal] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [showLangMenu, setShowLangMenu] = useState(false);
+    const [showBlockModal, setShowBlockModal] = useState(false);
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
     const { setTag } = usePostsStore();
+    const { user: currentUser, isAuthenticated } = useAuthStore();
+    const queryClient = useQueryClient();
     const langMenuRef = useRef(null);
     const buttonRef = useRef(null);
+    const moreMenuRef = useRef(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
     const category = CATEGORIES.find(c => c.value === post.category);
@@ -38,13 +46,16 @@ export default function PostCard({ post, onVote, showFullText = false }) {
             if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
                 setShowLangMenu(false);
             }
+            if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+                setShowMoreMenu(false);
+            }
         };
 
-        if (showLangMenu) {
+        if (showLangMenu || showMoreMenu) {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
-    }, [showLangMenu]);
+    }, [showLangMenu, showMoreMenu]);
 
     // Update dropdown position when menu opens
     useEffect(() => {
@@ -137,6 +148,45 @@ export default function PostCard({ post, onVote, showFullText = false }) {
                                 <span>{formatDate(post.createdAt)}</span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* 3-Dot Menu - Top Right */}
+                    <div className="relative" ref={moreMenuRef}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowMoreMenu(!showMoreMenu)}
+                            className="flex items-center h-8 w-8 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+                        >
+                            <MoreVertical className="w-5 h-5" />
+                        </Button>
+
+                        {showMoreMenu && (
+                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-900 border border-border/60 rounded-xl shadow-xl z-50 min-w-[200px] overflow-hidden">
+                                <button
+                                    onClick={() => {
+                                        setShowMoreMenu(false);
+                                        setShowReportModal(true);
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 text-gray-700 dark:text-gray-300"
+                                >
+                                    <Flag className="w-4 h-4 text-orange-500" />
+                                    Report Post
+                                </button>
+                                {isAuthenticated && !post.isAnonymous && currentUser?._id !== post.author?._id && (
+                                    <button
+                                        onClick={() => {
+                                            setShowMoreMenu(false);
+                                            setShowBlockModal(true);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-2.5 text-red-600 dark:text-red-400"
+                                    >
+                                        <Ban className="w-4 h-4" />
+                                        Block {post.author?.username}
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -347,16 +397,6 @@ export default function PostCard({ post, onVote, showFullText = false }) {
                             <Share2 className="w-4 h-4" />
                             <span className="text-sm font-medium hidden sm:inline">Share</span>
                         </Button>
-
-                        {/* Report */}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowReportModal(true)}
-                            className="flex items-center gap-1.5 h-9 px-3 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
-                        >
-                            <Flag className="w-4 h-4" />
-                        </Button>
                     </div>
                 </div>
 
@@ -365,6 +405,11 @@ export default function PostCard({ post, onVote, showFullText = false }) {
                     isOpen={showReportModal}
                     onClose={() => setShowReportModal(false)}
                     postId={post._id}
+                    authorId={post.author?._id}
+                    authorName={post.author?.username}
+                    isAnonymous={post.isAnonymous}
+                    isAuthenticated={isAuthenticated}
+                    currentUserId={currentUser?._id}
                 />
 
                 {/* Share Modal */}
@@ -374,6 +419,25 @@ export default function PostCard({ post, onVote, showFullText = false }) {
                     postId={post._id}
                     profession={post.profession}
                     country={post.country}
+                />
+
+                {/* Block Confirm Modal */}
+                <ConfirmModal
+                    isOpen={showBlockModal}
+                    onClose={() => setShowBlockModal(false)}
+                    onConfirm={async () => {
+                        try {
+                            await blockAPI.blockUser(post.author?._id);
+                            toast.success(`${post.author?.username} has been blocked`);
+                            queryClient.invalidateQueries({ queryKey: ['posts'] });
+                        } catch (error) {
+                            toast.error(error.response?.data?.message || 'Failed to block user');
+                        }
+                    }}
+                    title={`Block ${post.author?.username}?`}
+                    description="You will no longer see their posts or comments. You can unblock them anytime from your profile settings."
+                    confirmText="Block User"
+                    variant="destructive"
                 />
             </div>
         </Card >

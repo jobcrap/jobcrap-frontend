@@ -178,7 +178,7 @@ export default function Feed() {
 
                         <FeedSearchBar
                             value={localSearch}
-                            onChange={(e) => setLocalSearch(e.target.value)}
+                            onChange={(val) => setLocalSearch(val)}
                             onClear={() => {
                                 setLocalSearch('');
                                 setSearchQuery('');

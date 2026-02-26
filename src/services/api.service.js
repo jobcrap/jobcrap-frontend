@@ -205,3 +205,21 @@ export const settingsAPI = {
         return response.data;
     }
 };
+
+/**
+ * Block API calls
+ */
+export const blockAPI = {
+    blockUser: async (userId) => {
+        const response = await api.post(`/block/${userId}`);
+        return response.data;
+    },
+    unblockUser: async (userId) => {
+        const response = await api.delete(`/block/${userId}`);
+        return response.data;
+    },
+    getBlockedUsers: async () => {
+        const response = await api.get('/block');
+        return response.data;
+    }
+};
